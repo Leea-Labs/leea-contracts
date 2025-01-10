@@ -14,7 +14,7 @@ import (
 	"github.com/ethereum/go-ethereum/params"
 	"github.com/stretchr/testify/require"
 
-	storage_contract "github.com/Leea-Labs/leea-contracts/contracts/compiled/storage"
+	storage_contract "github.com/Leea-Labs/leea-contracts/contracts/artifacts/storage"
 )
 
 func TestStorageContract(t *testing.T) {
