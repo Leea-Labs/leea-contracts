@@ -25,7 +25,7 @@ contract AgentRegistry is Ownable {
         return _agentIndex.length - 1;
     }
 
-    function deleteUser(address agentAddress) public returns (uint index) {
+    function deleteAgent(address agentAddress) public returns (uint index) {
         uint rowToDelete = _agentStructs[agentAddress].index;
         address keyToMove = _agentIndex[_agentIndex.length - 1];
         _agentIndex[rowToDelete] = keyToMove;
