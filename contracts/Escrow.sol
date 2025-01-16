@@ -5,6 +5,9 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import {AgentRegistry} from "./AgentRegistry.sol";
+import {LeeaGlobalParams} from "./GlobalParameters.sol";
+import {ValidatorStaking} from "./ValidatorStaking.sol";
 
 /// @custom:security-contact contract_security@leealabs.com
 contract Escrow is Ownable, ReentrancyGuard {
@@ -31,10 +34,21 @@ contract Escrow is Ownable, ReentrancyGuard {
     mapping(address => uint256) private escrowBalance;
 
     ERC20 private _token;
-    uint256 private _fee;
+    AgentRegistry private _agentRegistry;
+    LeeaGlobalParams private _globalParams;
+    ValidatorStaking private _validatorStaking;
 
-    constructor(ERC20 leeaToken, address initialOwner) Ownable(initialOwner) {
+    constructor(
+        LeeaGlobalParams globalParams,
+        ERC20 leeaToken,
+        AgentRegistry agentRegistry,
+        ValidatorStaking validatorStaking,
+        address initialOwner
+    ) Ownable(initialOwner) {
         _token = leeaToken;
+        _agentRegistry = agentRegistry;
+        _globalParams = globalParams;
+        _validatorStaking = validatorStaking;
     }
 
     function deposit(uint256 _amount) public {
@@ -66,14 +80,34 @@ contract Escrow is Ownable, ReentrancyGuard {
         emit Withdrawn(_user, address(this), address(_token), _currentBalance);
     }
 
-    function payFee(address _user, address _agent) public nonReentrant {
-        require(msg.sender == owner(), "Only owner is allowed");
-        require(escrowBalance[_user] >= _fee, "Balance less than fee");
+    function payFee(address user, address agent) public nonReentrant onlyOwner {
+        require(_agentRegistry.isAgent(agent), "Agent is not registered");
+        uint256 agentFee = _agentRegistry.getAgentFee(agent);
+        (uint256 systemFeeNom, uint256 systemFeeDen) = _globalParams
+            .getSystemFeeRate();
+        // TODO pay attention to calculation here
+        uint256 systemFee = Math.mulDiv(agentFee, systemFeeNom, systemFeeDen);
+        uint256 totalFee = agentFee + systemFee;
+        require(escrowBalance[user] >= totalFee, "Balance less than fee");
         require(
-            _token.transferFrom(address(this), _agent, _fee),
+            _token.balanceOf(address(this)) > totalFee,
+            "Not enough escrow balance"
+        );
+        // send fee to agent
+        require(
+            _token.transferFrom(address(this), agent, agentFee),
             "Cant transfer tokens to escrow"
         );
-        escrowBalance[msg.sender] -= _fee;
-        emit FeePaid(_user, _agent, address(this), address(_token), _fee);
+        // send fee to validator staking
+        require(
+            _token.transferFrom(
+                address(this),
+                address(_validatorStaking),
+                systemFee
+            ),
+            "Cant transfer tokens to escrow"
+        );
+        escrowBalance[msg.sender] -= totalFee;
+        emit FeePaid(user, agent, address(this), address(_token), totalFee);
     }
 }

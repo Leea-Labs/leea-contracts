@@ -87,6 +87,45 @@ contract AgentRegistry is Ownable {
         return true;
     }
 
+    function updateAgentActivityScore(
+        address agentAddress,
+        uint256 newActivityScore
+    ) public onlyOwner returns (bool success) {
+        require(isAgent(agentAddress));
+        _agentStructs[agentAddress].score.activity = newActivityScore;
+        return true;
+    }
+
+    function updateAgentAccuracyScore(
+        address agentAddress,
+        uint256 newAccuracyScore
+    ) public onlyOwner returns (bool success) {
+        require(isAgent(agentAddress));
+        _agentStructs[agentAddress].score.accuracy = newAccuracyScore;
+        return true;
+    }
+
+    function getAgentActivityScore(
+        address agentAddress
+    ) public view returns (uint256 fee) {
+        require(isAgent(agentAddress));
+        return (_agentStructs[agentAddress].score.activity);
+    }
+
+    function getAgentAccuracyScore(
+        address agentAddress
+    ) public view returns (uint256 fee) {
+        require(isAgent(agentAddress));
+        return (_agentStructs[agentAddress].score.accuracy);
+    }
+
+    function getAgentFee(
+        address agentAddress
+    ) public view returns (uint256 fee) {
+        require(isAgent(agentAddress));
+        return (_agentStructs[agentAddress].fee);
+    }
+
     function getAgentCount() public view returns (uint count) {
         return _agentIndex.length;
     }

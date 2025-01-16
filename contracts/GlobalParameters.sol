@@ -16,6 +16,9 @@ contract LeeaGlobalParams is Ownable {
     // Minimum validator stake
     uint256 private _minValidatorStake;
 
+    // Slashing validator amount
+    uint256 private _slashValidator;
+
     // System fee rate
     uint256 private _systemFeeNominator;
     uint256 private _systemFeeDenominator;
@@ -28,12 +31,14 @@ contract LeeaGlobalParams is Ownable {
         uint256 initialMinValidatorStake,
         uint256 initialSystemFeeNominator,
         uint256 initialsSystemFeeDenominator,
-        uint256 initialMinimumAgentScore
+        uint256 initialMinimumAgentScore,
+        uint256 initialSlashingValidator
     ) Ownable(dao) {
         _minValidatorStake = initialMinValidatorStake;
         _systemFeeNominator = initialSystemFeeNominator;
         _systemFeeDenominator = initialsSystemFeeDenominator;
         _minimumAgentScore = initialMinimumAgentScore;
+        _slashValidator = initialSlashingValidator;
     }
 
     function updateStake(uint256 newStake) public onlyOwner {
@@ -82,5 +87,9 @@ contract LeeaGlobalParams is Ownable {
 
     function getMinimumAgentScore() public view returns (uint256) {
         return _minimumAgentScore;
+    }
+
+    function getSlashingAmount() public view returns (uint256) {
+        return _slashValidator;
     }
 }
