@@ -38,7 +38,7 @@ contract AgentRegistry is Ownable {
         address agentAddress,
         uint256 agentFee,
         string memory name
-    ) public onlyOwner returns (uint index) {
+    ) public returns (uint index) {
         require(!isAgent(agentAddress));
         _agentIndex.push(agentAddress);
         _agentStructs[agentAddress].fee = agentFee;
