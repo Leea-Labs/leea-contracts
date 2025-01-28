@@ -1,0 +1,22 @@
+[package]
+name = "leea-token-aiCO"
+version = "0.1.0"
+description = "Leea-Labs aiCO token program"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "leea_token_aico"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = { version = "0.30.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.30.0", features = ["metadata"] }
+mpl-token-metadata = "5.1.0"
+solana-program = "2.1.11"

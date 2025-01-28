@@ -1,0 +1,4 @@
+{"rust-analyzer.linkedProjects": [
+  "contracts/solana/Cargo.toml",
+  "contracts/solana/programs/leea-token/Cargo.toml"
+]}
