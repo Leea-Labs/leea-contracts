@@ -21,20 +21,20 @@ const metaplex = Metaplex.make(program.provider.connection);
 // token metadata
 const metadata = {
   uri: "https://raw.githubusercontent.com/solana-developers/program-examples/new-examples/tokens/tokens/.assets/spl-token.json",
-  name: "Solana Gold",
-  symbol: "GOLDSOL",
+  name: "Leea ai",
+  symbol: "LEEA",
 };
 
 // reward token mint PDA
 const [rewardTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
-  [Buffer.from("reward")],
-  program.programId
+  [Buffer.from("aiCO_reward")],
+  pg.PROGRAM_ID
 );
 
-// player data account PDA
-const [playerPDA] = anchor.web3.PublicKey.findProgramAddressSync(
-  [Buffer.from("player"), program.provider.publicKey.toBuffer()],
-  program.programId
+// agent data account PDA
+const [agentPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+  [Buffer.from("leea_agent"), pg.wallet.publicKey.toBuffer()],
+  pg.PROGRAM_ID
 );
 
 // reward token mint metadata account address
@@ -43,17 +43,17 @@ const rewardTokenMintMetadataPDA = await metaplex
   .pdas()
   .metadata({ mint: rewardTokenMintPDA });
 
-// player token account address
-const playerTokenAccount = getAssociatedTokenAddressSync(
+// agent token account address
+const agentTokenAccount = getAssociatedTokenAddressSync(
   rewardTokenMintPDA,
-  program.provider.publicKey
+  pg.wallet.publicKey
 );
 
 async function logTransaction(txHash) {
   const { blockhash, lastValidBlockHeight } =
-    await program.provider.connection.getLatestBlockhash();
+    await pg.connection.getLatestBlockhash();
 
-  await program.provider.connection.confirmTransaction({
+  await pg.connection.confirmTransaction({
     blockhash,
     lastValidBlockHeight,
     signature: txHash,
@@ -63,22 +63,22 @@ async function logTransaction(txHash) {
 }
 
 async function fetchAccountData() {
-  const [playerBalance, playerData] = await Promise.all([
-    program.provider.connection.getTokenAccountBalance(playerTokenAccount),
-    program.account.playerData.fetch(playerPDA),
+  const [agentBalance, agentData] = await Promise.all([
+    pg.connection.getTokenAccountBalance(agentTokenAccount),
+    pg.program.account.agentAccount.fetch(agentPDA),
   ]);
 
-  console.log("Player Token Balance: ", playerBalance.value.uiAmount);
-  console.log("Player Health: ", playerData.health);
+  console.log("Agent Token Balance: ", agentBalance.value.uiAmount);
+  console.log("Agent Name: ", agentData.agentName);
 }
 
 let txHash;
 
 try {
-  const mintData = await getMint(program.provider.connection, rewardTokenMintPDA);
+  const mintData = await getMint(pg.connection, rewardTokenMintPDA);
   console.log("Mint Already Exists");
 } catch {
-  txHash = await program.methods
+  txHash = await pg.program.methods
     .createMint(metadata.uri, metadata.name, metadata.symbol)
     .accounts({
       rewardTokenMint: rewardTokenMintPDA,
@@ -91,41 +91,18 @@ try {
 console.log("Token Mint: ", rewardTokenMintPDA.toString());
 
 try {
-  const playerData = await program.account.playerData.fetch(playerPDA);
-  console.log("Player Already Exists");
-  console.log("Player Health: ", playerData.health);
+  const agentData = await pg.program.account.agentAccount.fetch(agentPDA);
+  console.log("Agent Already Exists");
+  console.log("Agent Name: ", agentData.agentName);
 } catch {
-  txHash = await program.methods
-    .initPlayer()
+  txHash = await pg.program.methods
+    .initializeAgent("GPT4", new BN(1))
     .accounts({
-      playerData: playerPDA,
-      player: program.provider.publicKey,
+      agentAccount: agentPDA,
+      admin: pg.wallet.publicKey,
     })
     .rpc();
   await logTransaction(txHash);
-  console.log("Player Account Created");
+  console.log("Agent Account Created");
 }
-
-txHash = await program.methods
-  .killEnemy()
-  .accounts({
-    playerData: playerPDA,
-    playerTokenAccount: playerTokenAccount,
-    rewardTokenMint: rewardTokenMintPDA,
-  })
-  .rpc();
-await logTransaction(txHash);
-console.log("Enemy Defeated");
-await fetchAccountData();
-
-txHash = await program.methods
-  .heal()
-  .accounts({
-    playerData: playerPDA,
-    playerTokenAccount: playerTokenAccount,
-    rewardTokenMint: rewardTokenMintPDA,
-  })
-  .rpc();
-await logTransaction(txHash);
-console.log("Player Healed");
 await fetchAccountData();
