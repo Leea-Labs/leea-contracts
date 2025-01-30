@@ -9,13 +9,14 @@ use mpl_token_metadata::types::DataV2;
 use solana_program::system_instruction;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("CpnJzw1VnfaKYrbHFcLgSEYKJXDhorgQAHKmueLNZxNq");
+declare_id!("34TtUU4tubj5xyJ9cTthEAkNLgwdQWHCfoFrJ4WCvVAX");
 
-const ADMIN_PUBKEY: Pubkey = pubkey!("3M6Tp9boFAGWqM9FFeu6QTsgnsobe7UX79aryVtcAWpd");
+const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
 
 pub const AGENT_SEED: &[u8] = b"leea_agent";
 pub const AICO_SEED: &[u8] = b"aiCO_reward";
 pub const UNLOCK_TIME: i64 = 1738153798;
+pub const END_TIME: i64 = 1740740330;
 
 pub const PREFIX: &str = "metadata";
 
@@ -90,55 +91,61 @@ pub mod leea_token_aico {
         Ok(())
     }
 
-    pub fn initialize_agent(
-        ctx: Context<InitializeAgent>,
-        agent_name: String,
-        amount: u64,
-    ) -> Result<()> {
-        if amount == 0 {
-            return Err(error!(ErrorCode::AmountTooSmall));
-        };
-        let system_program = &ctx.accounts.system_program;
+    pub fn initialize_agent(ctx: Context<InitializeAgent>, agent_name: String) -> Result<()> {
         let holder = &ctx.accounts.holder;
         let agent_account = &mut ctx.accounts.agent_account;
-        // Create the transfer instruction
-        let transfer_instruction =
-            system_instruction::transfer(holder.key, ctx.accounts.admin.signer_key().as_ref().unwrap(), amount);
-        // Invoke the transfer instruction
-        anchor_lang::solana_program::program::invoke_signed(
-            &transfer_instruction,
-            &[
-                holder.to_account_info(),
-                ctx.accounts.admin.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
-            ],
-            &[],
-        )?;
         agent_account.holder = *holder.key;
-        agent_account.balance += amount;
+        agent_account.balance = 0;
         agent_account.agent_name = agent_name;
         agent_account.created_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
 
-    pub fn deposit(ctx: Context<UpdateBalance>, amount: u64) -> Result<()> {
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
         if amount == 0 {
             return Err(error!(ErrorCode::AmountTooSmall));
         };
-
+        let system_program = &ctx.accounts.system_program;
         let agent_account = &mut ctx.accounts.agent_account;
+        let from_account = &ctx.accounts.holder;
+        let to_account = &ctx.accounts.recipient;
+        // Create the transfer instruction
+        let transfer_instruction =
+            system_instruction::transfer(from_account.key, to_account.key, amount);
+        // Invoke the transfer instruction
+        anchor_lang::solana_program::program::invoke_signed(
+            &transfer_instruction,
+            &[
+                from_account.to_account_info(),
+                to_account.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[],
+        )?;
         agent_account.balance += amount;
+        agent_account.updated_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
 
-    pub fn aico_to_agent(ctx: Context<InitializeAgent>) -> Result<()> {
+    pub fn aico_to_agent(ctx: Context<RunAICO>) -> Result<()> {
+        // Check if time of aiCO
+        let current_time = Clock::get().unwrap().unix_timestamp;
+        if current_time < UNLOCK_TIME || current_time > END_TIME {
+            return err!(ErrorCode::NotAICOTime);
+        };
         // Check if agent deposited
         if ctx.accounts.agent_account.balance == 0 {
             return err!(ErrorCode::NotEnoughDeposit);
-        }
-        // Subtract SOL from agent // TODO
-        ctx.accounts.agent_account.balance =
-            ctx.accounts.agent_account.balance.checked_sub(1).unwrap();
+        };
+
+        let full_balance = ctx.accounts.agent_account.balance;
+        // Subtract SOL from agent
+        ctx.accounts.agent_account.balance = ctx
+            .accounts
+            .agent_account
+            .balance
+            .checked_sub(full_balance)
+            .unwrap();
 
         // PDA seeds and bump to "sign" for CPI
         let seeds = AICO_SEED;
@@ -156,23 +163,22 @@ pub mod leea_token_aico {
             signer,
         );
 
-        // Mint 1 token, accounting for decimals of mint
-        let amount = (1u64)
-            .checked_mul(10u64.pow(ctx.accounts.reward_token_mint.decimals as u32))
-            .unwrap();
-
-        mint_to(cpi_ctx, amount)?;
+        // Mint 1 decimal of Leea token to 1 lamport
+        mint_to(cpi_ctx, full_balance)?;
         Ok(())
     }
 }
 
 #[derive(Accounts)]
-pub struct UpdateBalance<'info> {
+pub struct Deposit<'info> {
     #[account(mut)]
     pub holder: Signer<'info>,
 
     #[account(mut, seeds = [AGENT_SEED, holder.key.as_ref()], bump)]
     pub agent_account: Account<'info, AgentAccount>,
+
+    #[account(mut, address = ADMIN_PUBKEY)]
+    pub recipient: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
 }
@@ -212,18 +218,28 @@ pub struct CreateMint<'info> {
 
 #[derive(Accounts)]
 pub struct InitializeAgent<'info> {
-    #[account(mut,address = ADMIN_PUBKEY)]
-    pub admin: AccountInfo<'info>,
+    #[account(mut)]
+    pub holder: Signer<'info>,
+    #[account(
+        init,
+        payer = holder,
+        seeds = [AGENT_SEED, holder.key().as_ref()],
+        bump,
+        space = 8 + std::mem::size_of::<AgentAccount>(),
+    )]
+    pub agent_account: Account<'info, AgentAccount>,
+    pub system_program: Program<'info, System>,
+}
 
+#[derive(Accounts)]
+pub struct RunAICO<'info> {
     #[account(mut)]
     pub holder: Signer<'info>,
 
     #[account(
-        init,
-        payer = holder,
-        seeds = [AGENT_SEED, holder.key.as_ref()],
+        mut,
+        seeds = [AGENT_SEED, holder.key().as_ref()],
         bump,
-        space = 8 + std::mem::size_of::<AgentAccount>(),
     )]
     pub agent_account: Account<'info, AgentAccount>,
 
@@ -264,4 +280,6 @@ pub enum ErrorCode {
     NotEnoughDeposit,
     #[msg("Amount must be greater than zero")]
     AmountTooSmall,
+    #[msg("Not a time of aiCO")]
+    NotAICOTime,
 }

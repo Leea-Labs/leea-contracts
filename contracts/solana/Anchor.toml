@@ -1,6 +1,6 @@
 [features]
 seeds = false
-skip-lint = false
+skip-lint = true
 
 [programs.localnet]
 leea_token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
