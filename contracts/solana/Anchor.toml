@@ -1,9 +1,10 @@
 [features]
-seeds = false
+resolution = true
 skip-lint = true
 
 [programs.localnet]
-leea_token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
+leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
+leea-token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
 
 [registry]
 url = "https://api.apr.dev"
@@ -13,5 +14,5 @@ cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
-test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
 client = "yarn run ts-node client/*.ts"
+test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts"
