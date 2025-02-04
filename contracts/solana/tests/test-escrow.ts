@@ -9,7 +9,8 @@ import {
   createInitializeMint2Instruction,
   createMintToInstruction,
   getAssociatedTokenAddressSync,
-  getMinimumBalanceForRentExemptMint
+  getMinimumBalanceForRentExemptMint,
+  getMint
 } from "@solana/spl-token";
 import { randomBytes } from "crypto";
 import * as web3 from "@solana/web3.js";
@@ -66,6 +67,31 @@ describe("escrow", () => {
     );
     return signature;
   };
+
+  it("Check Leea Mint", async () => {
+    // Leea Token program
+    const LEEA_TOKEN_PROGRAM = new web3.PublicKey(
+      "6ZfJgJYt9pXZNRd9S5busKXpBYmKaQJBWAC3R1GVD5se"
+    );
+    // token mint PDA
+    const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+      [Buffer.from("aiCO_reward")],
+      LEEA_TOKEN_PROGRAM
+    );
+
+    const leeaMint = await getMint(connection, leeaTokenMintPDA);
+    console.log("Token Mint: ", leeaMint.mintAuthority.toString());
+
+    const userTokenAccount = getAssociatedTokenAddressSync(
+      leeaTokenMintPDA,
+      provider.publicKey
+    );
+
+    const userBalance = await connection.getTokenAccountBalance(
+      userTokenAccount
+    );
+    console.log("Admin Leea Token Balance: ", userBalance.value.amount.toString());
+  });
 
   it("Airdrop and create mints", async () => {
     let lamports = await getMinimumBalanceForRentExemptMint(connection);
