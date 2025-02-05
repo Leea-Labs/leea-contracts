@@ -12,13 +12,14 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @custom:security-contact contract_security@leealabs.com
 contract LeeaToken is ERC20, ERC20Burnable, Ownable, ERC20Permit, ERC20Votes {
     constructor(
-        address initialOwner
+        address initialOwner,
+        uint256 supply
     )
         ERC20("LeeaToken", "LEEA")
         Ownable(initialOwner)
         ERC20Permit("LeeaToken")
     {
-        _mint(msg.sender, 100000000000 * 10 ** decimals());
+        _mint(msg.sender, supply * 10 ** decimals());
     }
 
     function mint(address to, uint256 amount) public onlyOwner {

@@ -28,14 +28,10 @@ npm install
 #### Governance module functions:
 
 1. Set/update global system parameters by token holders voting:
-* User Fees
-* Agent Rewards
-* Agent-to-Agent Fees/Rewards
-* System fees
+* Agent rewards cap/threshold
+* system fees % (rewards to validators)
 * Agent scoring parameters
 * Validator stake/reward/slashing
-
-2. Distribute rewards to token holders
 
 #### Escrow module functions:
 

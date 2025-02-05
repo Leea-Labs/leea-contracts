@@ -6,31 +6,94 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @custom:security-contact contract_security@leealabs.com
 contract AgentRegistry is Ownable {
     event Registered(address pub, string name);
+
+    struct AgentScore {
+        uint256 activity;
+        uint256 accuracy;
+    }
+
     struct Agent {
         string name;
-        uint256 score;
-        address wallet;
+        uint256 fee;
+        AgentScore score;
         uint index;
     }
 
     mapping(address => Agent) private _agentStructs;
     address[] private _agentIndex;
+    address private _dao;
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
+    constructor(address initialOwner, address dao) Ownable(initialOwner) {
+        _dao = dao;
+    }
 
-    function registerAgent(address agentAddress) public returns (uint index) {
+    function isAgent(address agentAddress) public view returns (bool isIndeed) {
+        if (_agentIndex.length == 0) return false;
+        return (_agentIndex[_agentStructs[agentAddress].index] == agentAddress);
+    }
+
+    function registerAgent(
+        address agentAddress,
+        uint256 agentFee
+    ) public onlyOwner returns (uint index) {
+        require(!isAgent(agentAddress));
         _agentIndex.push(agentAddress);
-        _agentStructs[agentAddress].wallet = agentAddress;
+        _agentStructs[agentAddress].fee = agentFee;
         _agentStructs[agentAddress].index = _agentIndex.length - 1;
         return _agentIndex.length - 1;
     }
 
-    function deleteAgent(address agentAddress) public returns (uint index) {
+    function deleteAgent(
+        address agentAddress
+    ) public onlyOwner returns (uint index) {
+        require(isAgent(agentAddress));
         uint rowToDelete = _agentStructs[agentAddress].index;
         address keyToMove = _agentIndex[_agentIndex.length - 1];
         _agentIndex[rowToDelete] = keyToMove;
         _agentStructs[keyToMove].index = rowToDelete;
         _agentIndex.pop();
         return rowToDelete;
+    }
+
+    function getAgent(
+        address agentAddress
+    )
+        public
+        view
+        returns (
+            string memory name,
+            uint256 fee,
+            uint256 activityScore,
+            uint256 accuracyScore,
+            uint index
+        )
+    {
+        require(isAgent(agentAddress) == true);
+        return (
+            _agentStructs[agentAddress].name,
+            _agentStructs[agentAddress].fee,
+            _agentStructs[agentAddress].score.activity,
+            _agentStructs[agentAddress].score.accuracy,
+            _agentStructs[agentAddress].index
+        );
+    }
+
+    function updateAgentFee(
+        address agentAddress,
+        uint256 newFee
+    ) public onlyOwner returns (bool success) {
+        require(isAgent(agentAddress));
+        _agentStructs[agentAddress].fee = newFee;
+        return true;
+    }
+
+    function getAgentCount() public view returns (uint count) {
+        return _agentIndex.length;
+    }
+
+    function getAgentAtIndex(
+        uint index
+    ) public view returns (address agentAddress) {
+        return _agentIndex[index];
     }
 }
