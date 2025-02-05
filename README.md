@@ -23,16 +23,17 @@ npm install
 * Leea Token
 * Escrow
 * Agent Registry 
-* Validator Staking
+* Validator Registry / Staking
 
 #### Governance module functions:
 
-1. Set system parameters by token holders voting:
+1. Set/update global system parameters by token holders voting:
 * User Fees
 * Agent Rewards
-* Agent scoring boundaries
-* Validator stake amount
-* Validator rewards
+* Agent-to-Agent Fees/Rewards
+* System fees
+* Agent scoring parameters
+* Validator stake/reward/slashing
 
 2. Distribute rewards to token holders
 
@@ -48,8 +49,9 @@ npm install
 2. Allow to exit
 3. Keep track of agent score
 4. Slash agents for misbehaving
+5. Agent fees
 
-#### Validator Staking module functions:
+#### Validator Registry/Staking module functions:
 
 1. Register validators
 2. Keep validators stake
