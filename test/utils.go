@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"testing"
 
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
@@ -12,24 +11,7 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient/simulated"
 	"github.com/ethereum/go-ethereum/params"
-	"github.com/stretchr/testify/require"
-
-	storage_contract "github.com/Leea-Labs/leea-contracts/contracts/artifacts/storage"
 )
-
-func TestStorageContract(t *testing.T) {
-	sim, auth, err := SetupBackend()
-	require.NoError(t, err)
-	_, tx, store, err := storage_contract.DeployStorage(auth, sim.Client())
-	require.NoError(t, err)
-	sim.Commit()
-	tx, err = store.Store(auth, big.NewInt(420))
-	require.NoError(t, err)
-	fmt.Printf("State update pending: 0x%x\n", tx.Hash())
-	sim.Commit()
-	val, err := store.Retrieve(nil)
-	require.Equal(t, big.NewInt(420).Uint64(), val.Uint64())
-}
 
 func SetupBackend() (*simulated.Backend, *bind.TransactOpts, error) {
 	key, err := crypto.GenerateKey()
