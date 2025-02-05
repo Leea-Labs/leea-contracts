@@ -2,6 +2,7 @@ import { assert } from "chai";
 import { spawn } from "child_process";
 import { PublicKey } from "@solana/web3.js";
 import { getAccount } from "@solana/spl-token";
+import * as anchor from "@coral-xyz/anchor";
 //  import { ClockworkProvider, PAYER_PUBKEY } from "@clockwork-xyz/sdk";
 
 const print_address = (label, address) => {
@@ -21,9 +22,9 @@ const print_tx = (label, address) => {
 
 const stream_program_logs = (programId) => {
     const cmd = spawn("solana", ["logs", "-u", "devnet", programId.toString()]);
-      cmd.stdout.on("data", data => {
-          console.log(`Program Logs: ${data}`);
-      });
+    cmd.stdout.on("data", data => {
+        console.log(`Program Logs: ${data}`);
+    });
 }
 
 const verifyAmount = async (connection, ata, expectedAmount) => {
@@ -49,6 +50,13 @@ const waitForThreadExec = async (clockworkProvider, thread: PublicKey, maxWait: 
     }
 }
 
+const log = async (signature: string): Promise<string> => {
+    console.log(
+        `Your transaction signature: ${signature}`
+    );
+    return signature;
+};
+
 export {
     print_address,
     print_thread,
@@ -56,4 +64,5 @@ export {
     stream_program_logs,
     verifyAmount,
     waitForThreadExec,
+    log,
 }
