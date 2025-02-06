@@ -7,14 +7,25 @@ import { getMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import type { LeeaTokenAico } from "../target/types/leea_token_aico";
 import { print_address, print_thread, print_tx, stream_program_logs } from "./utils";
 import assert from "assert";
+import { Keypair, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import path from 'path'
 
 describe("leea-aico", async () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
   const program = anchor.workspace.LeeaTokenAico as Program<LeeaTokenAico>;
+  const connection = provider.connection;
 
   print_address("🔗 Leea aiCO program", program.programId.toString());
+
+
+  const fullPath = path.resolve(process.cwd(), './tests/id.json')
+  const secret = require(fullPath)
+  if (!secret) {
+    throw new Error(`No secret found at ${fullPath}`)
+  }
+  const testKey = Keypair.fromSecretKey(new Uint8Array(secret))
 
   // metaplex token metadata program ID
   const TOKEN_METADATA_PROGRAM_ID = new web3.PublicKey(
@@ -24,7 +35,7 @@ describe("leea-aico", async () => {
   const LEEA_MULTISIG = new web3.PublicKey(
     "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
   );
-  
+
   // metaplex setup
   const metaplex = Metaplex.make(provider.connection);
 
@@ -43,7 +54,7 @@ describe("leea-aico", async () => {
 
   // agent data account PDA
   const [agentPDA] = anchor.web3.PublicKey.findProgramAddressSync(
-    [Buffer.from("leea_agent"), provider.wallet.publicKey.toBuffer()],
+    [Buffer.from("leea_agent"), testKey.publicKey.toBuffer()],
     program.programId
   );
 
@@ -56,7 +67,7 @@ describe("leea-aico", async () => {
   // agent token account address
   const agentTokenAccount = getAssociatedTokenAddressSync(
     leeaTokenMintPDA,
-    provider.wallet.publicKey
+    testKey.publicKey
   );
 
   async function logTransaction(txHash) {
@@ -73,6 +84,35 @@ describe("leea-aico", async () => {
   }
 
   let txHash;
+
+  const confirm = async (signature: string): Promise<string> => {
+    const block = await provider.connection.getLatestBlockhash();
+    await provider.connection.confirmTransaction({
+      signature,
+      ...block,
+    });
+    return signature;
+  };
+
+  const log = async (signature: string): Promise<string> => {
+    console.log(
+      `Your transaction signature: https://explorer.solana.com/transaction/${signature}?cluster=custom&customUrl=${connection.rpcEndpoint}`
+    );
+    return signature;
+  };
+
+  it("Top up admin wallet", async () => {
+    let tx = new Transaction();
+    tx.instructions = [
+      ...[testKey].map((k) =>
+        SystemProgram.transfer({
+          fromPubkey: provider.publicKey,
+          toPubkey: k.publicKey,
+          lamports: 10 * LAMPORTS_PER_SOL,
+        })
+      )];
+    await provider.sendAndConfirm(tx).then(log);
+  })
 
   it("Mint Leea Token", async () => {
     try {
@@ -100,7 +140,7 @@ describe("leea-aico", async () => {
       const agentData = await program.account.agentAccount.fetch(agentPDA);
       console.log("Agent Already Exists");
       console.log("Agent: ", agentData.holder.toString());
-      assert.equal(agentData.holder.toString(), provider.wallet.publicKey.toString())
+      assert.equal(agentData.holder.toString(), testKey.publicKey.toString())
     } catch (e) {
       // probably not exist try to create
       txHash = await program.methods
@@ -108,13 +148,14 @@ describe("leea-aico", async () => {
         .accounts({
           agentAccount: agentPDA,
         })
+        .signers([testKey])
         .rpc();
       await logTransaction(txHash);
       console.log("Agent Account Created");
       const agentData = await program.account.agentAccount.fetch(agentPDA);
       console.log("Agent: ", agentData.holder.toString());
       assert.equal(agentData.agentName, "GPT4")
-      assert.equal(agentData.holder.toString(), provider.wallet.publicKey.toString())
+      assert.equal(agentData.holder.toString(), testKey.publicKey.toString())
     }
   });
 
@@ -125,12 +166,13 @@ describe("leea-aico", async () => {
         recipient: LEEA_MULTISIG,
         agentAccount: agentPDA,
       })
+      .signers([testKey])
       .rpc();
     await logTransaction(txHash);
     const agentData = await program.account.agentAccount.fetch(agentPDA);
     console.log("Agent Balance: ", agentData.balance.toString());
     assert.equal(agentData.agentName, "GPT4")
-    assert.equal(agentData.holder.toString(), provider.wallet.publicKey.toString())
+    assert.equal(agentData.holder.toString(), testKey.publicKey.toString())
   });
 
   it("Mint Leea tokens at aiCO time", async () => {
