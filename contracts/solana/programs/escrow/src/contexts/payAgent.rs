@@ -15,7 +15,6 @@ pub struct Pay<'info> {
     #[account( mut,address = ADMIN_PUBKEY)]
     pub admin: Signer<'info>,
     #[account(mut)]
-    // pub taker: Signer<'info>,
     pub taker: AccountInfo<'info>,
     #[account(mut)]
     pub initializer: SystemAccount<'info>,

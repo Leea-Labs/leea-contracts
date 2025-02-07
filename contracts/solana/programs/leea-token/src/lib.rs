@@ -12,7 +12,7 @@ use solana_program::{pubkey, pubkey::Pubkey};
 declare_id!("6ZfJgJYt9pXZNRd9S5busKXpBYmKaQJBWAC3R1GVD5se");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
-const LEEA_MULTISIG: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
+const LEEA_MULTISIG: Pubkey = pubkey!("EFqAYmaZPwHdsBc8PCZYo5DywDVMrCHU79K6Fq1MrbQU");
 
 const AGENT_SEED: &[u8] = b"leea_agent";
 const AICO_SEED: &[u8] = b"aiCO_reward";
