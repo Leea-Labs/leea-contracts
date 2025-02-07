@@ -6,6 +6,8 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 /// @custom:security-contact contract_security@leealabs.com
 contract AgentRegistry is Ownable {
     event Registered(address pub, string name);
+    event Deleted(address pub);
+    event FeeUpdated(address pub, string name, uint256 newFee);
 
     struct AgentScore {
         uint256 activity;
@@ -34,12 +36,15 @@ contract AgentRegistry is Ownable {
 
     function registerAgent(
         address agentAddress,
-        uint256 agentFee
+        uint256 agentFee,
+        string memory name
     ) public onlyOwner returns (uint index) {
         require(!isAgent(agentAddress));
         _agentIndex.push(agentAddress);
         _agentStructs[agentAddress].fee = agentFee;
+        _agentStructs[agentAddress].name = name;
         _agentStructs[agentAddress].index = _agentIndex.length - 1;
+        emit Registered(agentAddress, name);
         return _agentIndex.length - 1;
     }
 
@@ -52,6 +57,7 @@ contract AgentRegistry is Ownable {
         _agentIndex[rowToDelete] = keyToMove;
         _agentStructs[keyToMove].index = rowToDelete;
         _agentIndex.pop();
+        emit Deleted(agentAddress);
         return rowToDelete;
     }
 
@@ -84,6 +90,7 @@ contract AgentRegistry is Ownable {
     ) public onlyOwner returns (bool success) {
         require(isAgent(agentAddress));
         _agentStructs[agentAddress].fee = newFee;
+        emit FeeUpdated(agentAddress, _agentStructs[agentAddress].name,  _agentStructs[agentAddress].fee);
         return true;
     }
 
