@@ -6,11 +6,16 @@ use anchor_spl::{
 };
 use mpl_token_metadata::types::DataV2;
 
+use solana_program::system_instruction;
 use solana_program::{pubkey, pubkey::Pubkey};
 
 declare_id!("CpnJzw1VnfaKYrbHFcLgSEYKJXDhorgQAHKmueLNZxNq");
 
-const ADMIN_PUBKEY: Pubkey = pubkey!("REPLACE_WITH_YOUR_WALLET_PUBKEY");
+const ADMIN_PUBKEY: Pubkey = pubkey!("3M6Tp9boFAGWqM9FFeu6QTsgnsobe7UX79aryVtcAWpd");
+
+pub const AGENT_SEED: &[u8] = b"leea_agent";
+pub const AICO_SEED: &[u8] = b"aiCO_reward";
+pub const UNLOCK_TIME: i64 = 1738153798;
 
 pub const PREFIX: &str = "metadata";
 
@@ -37,7 +42,7 @@ pub mod leea_token_aico {
         symbol: String,
     ) -> Result<()> {
         // PDA seeds and bump to "sign" for CPI
-        let seeds = b"reward";
+        let seeds = AICO_SEED;
         let bump = ctx.bumps.reward_token_mint;
         let signer: &[&[&[u8]]] = &[&[seeds, &[bump]]];
 
@@ -56,9 +61,9 @@ pub mod leea_token_aico {
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_metadata_program.to_account_info(),
             CreateMetadataAccountsV3 {
-                 // the metadata account being created
+                // the metadata account being created
                 metadata: ctx.accounts.metadata_account.to_account_info(),
-                 // the mint account of the metadata account
+                // the mint account of the metadata account
                 mint: ctx.accounts.reward_token_mint.to_account_info(),
                 // the mint authority of the mint account
                 mint_authority: ctx.accounts.reward_token_mint.to_account_info(),
@@ -85,22 +90,58 @@ pub mod leea_token_aico {
         Ok(())
     }
 
-    // Create new agent
-    pub fn init_agent(ctx: Context<InitAgent>) -> Result<()> {
-        ctx.accounts.agent_data.deposit = 0;
+    pub fn initialize_agent(
+        ctx: Context<InitializeAgent>,
+        agent_name: String,
+        amount: u64,
+    ) -> Result<()> {
+        if amount == 0 {
+            return Err(error!(ErrorCode::AmountTooSmall));
+        };
+        let system_program = &ctx.accounts.system_program;
+        let holder = &ctx.accounts.holder;
+        let agent_account = &mut ctx.accounts.agent_account;
+        // Create the transfer instruction
+        let transfer_instruction =
+            system_instruction::transfer(holder.key, ctx.accounts.admin.signer_key().as_ref().unwrap(), amount);
+        // Invoke the transfer instruction
+        anchor_lang::solana_program::program::invoke_signed(
+            &transfer_instruction,
+            &[
+                holder.to_account_info(),
+                ctx.accounts.admin.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
+            &[],
+        )?;
+        agent_account.holder = *holder.key;
+        agent_account.balance += amount;
+        agent_account.agent_name = agent_name;
+        agent_account.created_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
     }
 
-    pub fn register_agent(ctx: Context<AgentRegistry>) -> Result<()> {
+    pub fn deposit(ctx: Context<UpdateBalance>, amount: u64) -> Result<()> {
+        if amount == 0 {
+            return Err(error!(ErrorCode::AmountTooSmall));
+        };
+
+        let agent_account = &mut ctx.accounts.agent_account;
+        agent_account.balance += amount;
+        Ok(())
+    }
+
+    pub fn aico_to_agent(ctx: Context<InitializeAgent>) -> Result<()> {
         // Check if agent deposited
-        if ctx.accounts.agent_data.deposit == 0 {
+        if ctx.accounts.agent_account.balance == 0 {
             return err!(ErrorCode::NotEnoughDeposit);
         }
         // Subtract SOL from agent // TODO
-        ctx.accounts.agent_data.deposit = ctx.accounts.agent_data.deposit.checked_sub(1).unwrap();
+        ctx.accounts.agent_account.balance =
+            ctx.accounts.agent_account.balance.checked_sub(1).unwrap();
 
         // PDA seeds and bump to "sign" for CPI
-        let seeds = b"aiCO_reward";
+        let seeds = AICO_SEED;
         let bump = ctx.bumps.reward_token_mint;
         let signer: &[&[&[u8]]] = &[&[seeds, &[bump]]];
 
@@ -126,6 +167,17 @@ pub mod leea_token_aico {
 }
 
 #[derive(Accounts)]
+pub struct UpdateBalance<'info> {
+    #[account(mut)]
+    pub holder: Signer<'info>,
+
+    #[account(mut, seeds = [AGENT_SEED, holder.key.as_ref()], bump)]
+    pub agent_account: Account<'info, AgentAccount>,
+
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
 pub struct CreateMint<'info> {
     #[account(
         mut,
@@ -136,7 +188,7 @@ pub struct CreateMint<'info> {
     // The PDA is both the address of the mint account and the mint authority
     #[account(
         init,
-        seeds = [b"aiCO_reward"],
+        seeds = [AICO_SEED],
         bump,
         payer = admin,
         mint::decimals = 9,
@@ -159,44 +211,34 @@ pub struct CreateMint<'info> {
 }
 
 #[derive(Accounts)]
-pub struct InitAgent<'info> {
+pub struct InitializeAgent<'info> {
+    #[account(mut,address = ADMIN_PUBKEY)]
+    pub admin: AccountInfo<'info>,
+
+    #[account(mut)]
+    pub holder: Signer<'info>,
+
     #[account(
         init,
-        payer = agent,
-        space = 8 + 8,
-        seeds = [b"agent", agent.key().as_ref()],
+        payer = holder,
+        seeds = [AGENT_SEED, holder.key.as_ref()],
         bump,
+        space = 8 + std::mem::size_of::<AgentAccount>(),
     )]
-    pub agent_data: Account<'info, AgentData>,
-    #[account(mut)]
-    pub agent: Signer<'info>,
-    pub system_program: Program<'info, System>,
-}
+    pub agent_account: Account<'info, AgentAccount>,
 
-#[derive(Accounts)]
-pub struct AgentRegistry<'info> {
-    #[account(mut)]
-    pub agent: Signer<'info>,
-
-    #[account(
-        mut,
-        seeds = [b"agent", agent.key().as_ref()],
-        bump,
-    )]
-    pub agent_data: Account<'info, AgentData>,
-
-    // Initialize player token account if it doesn't exist
+    // Initialize agent token account if it doesn't exist
     #[account(
         init_if_needed,
-        payer = agent,
+        payer = holder,
         associated_token::mint = reward_token_mint,
-        associated_token::authority = agent
+        associated_token::authority = holder
     )]
     pub agent_token_account: Account<'info, TokenAccount>,
 
     #[account(
         mut,
-        seeds = [b"aiCO_reward"],
+        seeds = [AICO_SEED],
         bump,
     )]
     pub reward_token_mint: Account<'info, Mint>,
@@ -207,12 +249,19 @@ pub struct AgentRegistry<'info> {
 }
 
 #[account]
-pub struct AgentData {
-    pub deposit: u8,
+#[derive(Default)]
+pub struct AgentAccount {
+    pub holder: Pubkey,
+    pub agent_name: String,
+    pub balance: u64,
+    pub created_at: i64,
+    pub updated_at: i64,
 }
 
 #[error_code]
 pub enum ErrorCode {
     #[msg("Not enough deposit")]
     NotEnoughDeposit,
+    #[msg("Amount must be greater than zero")]
+    AmountTooSmall,
 }
