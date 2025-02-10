@@ -43,8 +43,8 @@ describe("leea-aico", async () => {
   }
   const agent1 = Keypair.fromSecretKey(new Uint8Array(secret))
   console.log(`Agent key: ${agent1.publicKey.toString()}'`); // 55rm9zK2YZumXeXH6XSXXjgtkSzL4MDeh9K8XFmWrs28
- 
-  // const [agent1, agent2] = Array.from({ length: 2 }, () => Keypair.generate());
+
+  const receiver = Keypair.generate();
 
   // Get required PDAs
   // 1. Reward token mint PDA
@@ -61,6 +61,11 @@ describe("leea-aico", async () => {
   const agentTokenAccount = getAssociatedTokenAddressSync(
     leeaTokenMintPDA,
     agent1.publicKey
+  );
+  // 4. Receiver token account address
+  const receiverTokenAccount = getAssociatedTokenAddressSync(
+    leeaTokenMintPDA,
+    receiver.publicKey
   );
 
   // Metaplex data for token
@@ -206,4 +211,24 @@ describe("leea-aico", async () => {
     const fundBalance = await provider.connection.getBalance(fundsKey.publicKey);
     console.log(`Leea fund wallet balance ${fundBalance}`)
   });
+
+  it("Mint tokens to any receiver", async () => {
+    txHash = await program.methods
+      .mintToReceiver(new BN(10000000))
+      .accounts({
+        admin: adminKey.publicKey,
+        leeaTokenMint: leeaTokenMintPDA,
+        receiver: receiver.publicKey,
+        receiverTokenAccount: receiverTokenAccount
+      })
+      .signers([adminKey])
+      .rpc();
+    await logTransaction(txHash);
+    const [receiverBalance] = await Promise.all([
+      provider.connection.getTokenAccountBalance(receiverTokenAccount)
+    ]);
+    console.log("Receiver Token Balance: ", receiverBalance.value.uiAmount);
+    assert.notEqual(receiverBalance.value.uiAmount, 10000000);
+  });
+
 });

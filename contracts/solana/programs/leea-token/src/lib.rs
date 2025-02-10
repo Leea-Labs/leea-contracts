@@ -170,6 +170,26 @@ pub mod leea_token_aico {
         mint_to(cpi_ctx, full_balance)?;
         Ok(())
     }
+
+    pub fn mint_to_receiver(ctx: Context<MintTokens>, amount: u64) -> Result<()> {
+        // PDA seeds and bump to "sign" for CPI
+        let seeds = AICO_SEED;
+        let bump = ctx.bumps.leea_token_mint;
+        let signer: &[&[&[u8]]] = &[&[seeds, &[bump]]];
+
+        // CPI Context
+        let cpi_ctx = CpiContext::new_with_signer(
+            ctx.accounts.token_program.to_account_info(),
+            MintTo {
+                mint: ctx.accounts.leea_token_mint.to_account_info(),
+                to: ctx.accounts.receiver_token_account.to_account_info(),
+                authority: ctx.accounts.leea_token_mint.to_account_info(),
+            },
+            signer,
+        );
+        mint_to(cpi_ctx, amount)?;
+        Ok(())
+    }
 }
 
 #[derive(Accounts)]
@@ -262,6 +282,36 @@ pub struct RunAICO<'info> {
     )]
     pub leea_token_mint: Account<'info, Mint>,
 
+    pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct MintTokens<'info> {
+    #[account(
+        mut,
+        address = ADMIN_PUBKEY
+    )]
+    pub admin: Signer<'info>,
+
+    #[account(mut)]
+    pub receiver: AccountInfo<'info>,
+    // Initialize receiver token account if it doesn't exist
+    #[account(
+        init_if_needed,
+        payer = admin,
+        associated_token::mint = leea_token_mint,
+        associated_token::authority = receiver
+    )]
+    pub receiver_token_account: Account<'info, TokenAccount>,
+
+    #[account(
+        mut,
+        seeds = [AICO_SEED],
+        bump,
+    )]
+    pub leea_token_mint: Account<'info, Mint>,
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
