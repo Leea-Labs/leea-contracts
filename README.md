@@ -4,6 +4,23 @@
 Prerequisites:
 * anchor-cli 0.30.1
 
+## Run Tests
+1. Download sample metadata for token
+```sh
+mkdir solana-clones
+cd solana-clones
+solana program dump -u m metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s metadata.so
+solana account -u m 7FTdQdMqkk5Xc2oFsYR88BuJt2yyCPReTpqr3viH6b6C --output-file nft.json --output json-compact
+solana account -u m 4tSgNWeqtgp2kwRgjTqgpenP4wxfPaVCvganMR2gnd8W --output-file metadata.json --output json-compact
+```
+2. Run test validator
+```sh
+solana-test-validator -r --bpf-program metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s metadata.so --account 7FTdQdMqkk5Xc2oFsYR88BuJt2yyCPReTpqr3viH6b6C nft.json  --account 4tSgNWeqtgp2kwRgjTqgpenP4wxfPaVCvganMR2gnd8W metadata.json
+```
+3. Run tests from root or /solana/
+```sh
+anchor test --skip-local-validator
+```
 ##### Project Objects:
 * Leea Token aiCO
 
