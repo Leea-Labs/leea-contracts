@@ -9,11 +9,17 @@ const AGENT_SEED: &[u8] = b"leea_agent";
 #[program]
 pub mod leea_agent_registry {
     use super::*;
-    pub fn register_agent(ctx: Context<RegisterAgent>, agent_name: String, fee: u64) -> Result<()> {
+    pub fn register_agent(
+        ctx: Context<RegisterAgent>,
+        agent_name: String,
+        description: String,
+        fee: u64,
+    ) -> Result<()> {
         let holder = &ctx.accounts.holder;
         let agent_account = &mut ctx.accounts.agent_account;
         agent_account.holder = *holder.key;
         agent_account.agent_name = agent_name;
+        agent_account.description = description;
         agent_account.fee = fee;
         agent_account.created_at = Clock::get().unwrap().unix_timestamp;
         Ok(())
@@ -64,6 +70,7 @@ pub struct UpdateAgentScore<'info> {
 pub struct AgentAccount {
     pub holder: Pubkey,
     pub agent_name: String,
+    pub description: String,
     pub fee: u64,
     pub score: u64,
     pub created_at: i64,

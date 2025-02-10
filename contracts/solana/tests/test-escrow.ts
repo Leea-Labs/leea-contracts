@@ -213,7 +213,18 @@ describe("escrow", () => {
   it("Pay to agent", async () => {
     await program.methods
       .payToAgent(new anchor.BN(1e3))
-      .accounts({ ...accounts })
+      .accounts({
+        admin: adminKey.publicKey,
+        initializer: initializer.publicKey,
+        taker: taker.publicKey,
+        mintA: leeaTokenMintPDA,
+        takerAtaA,
+        escrow,
+        vault,
+        associatedTokenprogram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
       .signers([adminKey])
       .rpc()
       .then(confirm)
