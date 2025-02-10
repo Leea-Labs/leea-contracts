@@ -9,16 +9,20 @@ use mpl_token_metadata::types::DataV2;
 use solana_program::system_instruction;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("34TtUU4tubj5xyJ9cTthEAkNLgwdQWHCfoFrJ4WCvVAX");
+declare_id!("6ZfJgJYt9pXZNRd9S5busKXpBYmKaQJBWAC3R1GVD5se");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
+const LEEA_MULTISIG: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
 
-pub const AGENT_SEED: &[u8] = b"leea_agent";
-pub const AICO_SEED: &[u8] = b"aiCO_reward";
-pub const UNLOCK_TIME: i64 = 1738153798;
-pub const END_TIME: i64 = 1740740330;
+const AGENT_SEED: &[u8] = b"leea_agent";
+const AICO_SEED: &[u8] = b"aiCO_reward";
+const UNLOCK_TIME: i64 = 1738153798;
+const END_TIME: i64 = 1740740330;
 
-pub const PREFIX: &str = "metadata";
+
+const PREFIX: &str = "metadata";
+
+const MAX_DEPOSIT: u64 = 100000000000;
 
 fn find_metadata_account(mint: &Pubkey) -> (Pubkey, u8) {
     Pubkey::find_program_address(
@@ -102,8 +106,8 @@ pub mod leea_token_aico {
     }
 
     pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
-        if amount == 0 {
-            return Err(error!(ErrorCode::AmountTooSmall));
+        if amount == 0 || amount > MAX_DEPOSIT {
+            return Err(error!(ErrorCode::AmountTooBig));
         };
         let system_program = &ctx.accounts.system_program;
         let agent_account = &mut ctx.accounts.agent_account;
@@ -118,7 +122,7 @@ pub mod leea_token_aico {
             &[
                 from_account.to_account_info(),
                 to_account.to_account_info(),
-                ctx.accounts.system_program.to_account_info(),
+                system_program.to_account_info(),
             ],
             &[],
         )?;
@@ -177,7 +181,7 @@ pub struct Deposit<'info> {
     #[account(mut, seeds = [AGENT_SEED, holder.key.as_ref()], bump)]
     pub agent_account: Account<'info, AgentAccount>,
 
-    #[account(mut, address = ADMIN_PUBKEY)]
+    #[account(mut, address = LEEA_MULTISIG)]
     pub recipient: AccountInfo<'info>,
 
     pub system_program: Program<'info, System>,
@@ -278,8 +282,8 @@ pub struct AgentAccount {
 pub enum ErrorCode {
     #[msg("Not enough deposit")]
     NotEnoughDeposit,
-    #[msg("Amount must be greater than zero")]
-    AmountTooSmall,
+    #[msg("Amount must not be greater than MAX_DEPOSIT", MAX_DEPOSIT)]
+    AmountTooBig,
     #[msg("Not a time of aiCO")]
     NotAICOTime,
 }
