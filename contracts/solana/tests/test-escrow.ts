@@ -19,11 +19,13 @@ import { randomBytes } from "crypto";
 import * as web3 from "@solana/web3.js";
 import path from 'path'
 import assert from "assert";
+import type { LeeaTokenAico } from "../target/types/leea_token_aico";
 
 describe("escrow", () => {
   const provider = anchor.AnchorProvider.env();
   const connection = provider.connection;
   const program = anchor.workspace.Escrow as anchor.Program<Escrow>;
+  const leeaAiCOprogram = anchor.workspace.LeeaTokenAico as anchor.Program<LeeaTokenAico>;
 
   // Create key pairs #######################################
   // 1. Admin key
@@ -47,25 +49,21 @@ describe("escrow", () => {
   const [initializer, taker] = Array.from({ length: 2 }, () => Keypair.generate());
 
   // Get required PDAs ######################################
-  // 1. Leea aiCO Token program
-  const LEEA_TOKEN_PROGRAM = new web3.PublicKey(
-    "6ZfJgJYt9pXZNRd9S5busKXpBYmKaQJBWAC3R1GVD5se"
-  );
-  // 2. Token mint PDA
+  // 1. Token mint PDA
   const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("aiCO_reward")],
-    LEEA_TOKEN_PROGRAM
+    leeaAiCOprogram.programId
   );
-  // 3. Initializer Token account
+  // 2. Initializer Token account
   const initializerAtaA = getAssociatedTokenAddressSync(leeaTokenMintPDA, initializer.publicKey)
-  // 4. Taker(agent) Token account
+  // 3. Taker(agent) Token account
   const takerAtaA = getAssociatedTokenAddressSync(leeaTokenMintPDA, taker.publicKey)
-  // 5. Admin Token account
+  // 4. Admin Token account
   const adminTokenAccount = getAssociatedTokenAddressSync(
     leeaTokenMintPDA,
     adminKey.publicKey
   );
-  // 6. Determined Escrow and Vault addresses
+  // 5. Determined Escrow and Vault addresses
   const seed = new anchor.BN(randomBytes(8));
   const escrow = PublicKey.findProgramAddressSync(
     [Buffer.from("state"), seed.toArrayLike(Buffer, "le", 8)],

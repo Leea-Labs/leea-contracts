@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("5ewVLhDWjkrJtBqzt2KPyYBqKLEtZohbw72ZSbApJfQp");
+declare_id!("DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
 const AGENT_SEED: &[u8] = b"leea_agent";
