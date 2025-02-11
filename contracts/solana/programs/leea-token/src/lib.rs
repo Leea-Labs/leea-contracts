@@ -19,7 +19,6 @@ const AICO_SEED: &[u8] = b"aiCO_reward";
 const UNLOCK_TIME: i64 = 1738153798;
 const END_TIME: i64 = 1740740330;
 
-
 const PREFIX: &str = "metadata";
 
 const MAX_DEPOSIT: u64 = 100000000000;
@@ -48,7 +47,7 @@ pub mod leea_token_aico {
     ) -> Result<()> {
         // PDA seeds and bump to "sign" for CPI
         let seeds = AICO_SEED;
-        let bump = ctx.bumps.reward_token_mint;
+        let bump = ctx.bumps.leea_token_mint;
         let signer: &[&[&[u8]]] = &[&[seeds, &[bump]]];
 
         // On-chain token metadata for the mint
@@ -69,11 +68,11 @@ pub mod leea_token_aico {
                 // the metadata account being created
                 metadata: ctx.accounts.metadata_account.to_account_info(),
                 // the mint account of the metadata account
-                mint: ctx.accounts.reward_token_mint.to_account_info(),
+                mint: ctx.accounts.leea_token_mint.to_account_info(),
                 // the mint authority of the mint account
-                mint_authority: ctx.accounts.reward_token_mint.to_account_info(),
+                mint_authority: ctx.accounts.leea_token_mint.to_account_info(),
                 // the update authority of the metadata account
-                update_authority: ctx.accounts.reward_token_mint.to_account_info(),
+                update_authority: ctx.accounts.leea_token_mint.to_account_info(),
                 // the payer for creating the metadata account
                 payer: ctx.accounts.admin.to_account_info(),
                 // the system program account
@@ -153,16 +152,16 @@ pub mod leea_token_aico {
 
         // PDA seeds and bump to "sign" for CPI
         let seeds = AICO_SEED;
-        let bump = ctx.bumps.reward_token_mint;
+        let bump = ctx.bumps.leea_token_mint;
         let signer: &[&[&[u8]]] = &[&[seeds, &[bump]]];
 
         // CPI Context
         let cpi_ctx = CpiContext::new_with_signer(
             ctx.accounts.token_program.to_account_info(),
             MintTo {
-                mint: ctx.accounts.reward_token_mint.to_account_info(),
+                mint: ctx.accounts.leea_token_mint.to_account_info(),
                 to: ctx.accounts.agent_token_account.to_account_info(),
-                authority: ctx.accounts.reward_token_mint.to_account_info(),
+                authority: ctx.accounts.leea_token_mint.to_account_info(),
             },
             signer,
         );
@@ -202,15 +201,15 @@ pub struct CreateMint<'info> {
         bump,
         payer = admin,
         mint::decimals = 9,
-        mint::authority = reward_token_mint,
+        mint::authority = leea_token_mint,
 
     )]
-    pub reward_token_mint: Account<'info, Mint>,
+    pub leea_token_mint: Account<'info, Mint>,
 
     ///CHECK: Using "address" constraint to validate metadata account address
     #[account(
         mut,
-        address=find_metadata_account(&reward_token_mint.key()).0
+        address=find_metadata_account(&leea_token_mint.key()).0
     )]
     pub metadata_account: UncheckedAccount<'info>,
 
@@ -251,7 +250,7 @@ pub struct RunAICO<'info> {
     #[account(
         init_if_needed,
         payer = holder,
-        associated_token::mint = reward_token_mint,
+        associated_token::mint = leea_token_mint,
         associated_token::authority = holder
     )]
     pub agent_token_account: Account<'info, TokenAccount>,
@@ -261,7 +260,7 @@ pub struct RunAICO<'info> {
         seeds = [AICO_SEED],
         bump,
     )]
-    pub reward_token_mint: Account<'info, Mint>,
+    pub leea_token_mint: Account<'info, Mint>,
 
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
