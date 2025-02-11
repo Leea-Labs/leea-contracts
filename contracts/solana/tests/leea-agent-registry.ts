@@ -1,7 +1,7 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import type { LeeaAgentRegistry } from "../target/types/leea_agent_registry";
-import { print_address, print_thread, print_tx, stream_program_logs, log } from "./utils";
+import { print_address, log, confirm } from "./utils";
 import assert from "assert";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 
@@ -13,15 +13,6 @@ describe("leea-agent-registry", async () => {
     const connection = provider.connection;
 
     print_address("🔗 Leea Agent Registry program", program.programId.toString());
-
-    const confirm = async (signature: string): Promise<string> => {
-        const block = await connection.getLatestBlockhash();
-        await connection.confirmTransaction({
-            signature,
-            ...block,
-        });
-        return signature;
-    };
 
     // Create agent keys
     const [agent1, agent2] = Array.from({ length: 2 }, () => Keypair.generate());
@@ -36,7 +27,7 @@ describe("leea-agent-registry", async () => {
                 })
             )];
 
-        await provider.sendAndConfirm(tx).then(log);
+        await provider.sendAndConfirm(tx).then((t) => log(t, connection));
         const agentBalance1 = await provider.connection.getBalance(agent1.publicKey);
         const agentBalance2 = await provider.connection.getBalance(agent2.publicKey);
         console.log(`Agent1 balance ${agentBalance1}`)
@@ -54,8 +45,8 @@ describe("leea-agent-registry", async () => {
             })
             .signers([agent1])
             .rpc()
-            .then(confirm)
-            .then(log);
+            .then((t) => confirm(t, connection))
+            .then((t) => log(t, connection));
         await program.methods
             .registerAgent("DeepSeek", "agent to classify text", fee)
             .accounts({
@@ -63,8 +54,8 @@ describe("leea-agent-registry", async () => {
             })
             .signers([agent2])
             .rpc()
-            .then(confirm)
-            .then(log);
+            .then((t) => confirm(t, connection))
+            .then((t) => log(t, connection));
 
         const [agent1PDA] = anchor.web3.PublicKey.findProgramAddressSync(
             [Buffer.from("leea_agent"), agent1.publicKey.toBuffer()],

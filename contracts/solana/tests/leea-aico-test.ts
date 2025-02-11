@@ -5,7 +5,7 @@ import * as web3 from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
 import { getMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
 import type { LeeaTokenAico } from "../target/types/leea_token_aico";
-import { print_address, print_thread, print_tx, stream_program_logs } from "./utils";
+import { print_address, log, confirm } from "./utils";
 import assert from "assert";
 import { Keypair, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import path from 'path'
@@ -21,7 +21,7 @@ describe("leea-aico", async () => {
   // Create key pairs
   // 1. Admin key
   let fullPath = path.resolve(process.cwd(), './tests/admin.json')
-  let secret = require(path.resolve(process.cwd(), './tests/admin.json'))
+  let secret = require(fullPath)
   if (!secret) {
     throw new Error(`No secret found at ${fullPath}`)
   }
@@ -86,28 +86,7 @@ describe("leea-aico", async () => {
     .pdas()
     .metadata({ mint: leeaTokenMintPDA });
 
-  // Utility functions
-  async function logTransaction(txHash) {
-    const { blockhash, lastValidBlockHeight } =
-      await provider.connection.getLatestBlockhash();
-
-    await provider.connection.confirmTransaction({
-      blockhash,
-      lastValidBlockHeight,
-      signature: txHash,
-    });
-
-    console.log(`Use 'solana confirm -v ${txHash}' to see the logs`);
-  }
-
   let txHash;
-
-  const log = async (signature: string): Promise<string> => {
-    console.log(
-      `Your transaction signature: https://explorer.solana.com/transaction/${signature}?cluster=custom&customUrl=${connection.rpcEndpoint}`
-    );
-    return signature;
-  };
 
   it("Add lamports to keypairs", async () => {
     let tx = new Transaction();
@@ -119,7 +98,7 @@ describe("leea-aico", async () => {
           lamports: 10 * LAMPORTS_PER_SOL,
         })
       )];
-    await provider.sendAndConfirm(tx).then(log);
+    await provider.sendAndConfirm(tx).then((t) => log(t, connection));
   })
 
   it("Mint Leea SPL Token", async () => {
@@ -135,8 +114,9 @@ describe("leea-aico", async () => {
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .signers([adminKey])
-        .rpc();
-      await logTransaction(txHash);
+        .rpc()
+        .then((t) => confirm(t, connection))
+        .then((t) => log(t, connection));
       console.log("Token Minted: ", leeaTokenMintPDA.toString());
       const mintData = await getMint(provider.connection, leeaTokenMintPDA);
       // Assertions
@@ -159,8 +139,9 @@ describe("leea-aico", async () => {
           agentAccount: agentPDA,
         })
         .signers([agent1])
-        .rpc();
-      await logTransaction(txHash);
+        .rpc()
+        .then((t) => confirm(t, connection))
+        .then((t) => log(t, connection));
       console.log("Agent Account Created");
       const agentData = await program.account.agentAccount.fetch(agentPDA);
       console.log("Agent: ", agentData.holder.toString());
@@ -178,8 +159,9 @@ describe("leea-aico", async () => {
         holder: agent1.publicKey
       })
       .signers([agent1])
-      .rpc();
-    await logTransaction(txHash);
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
     const agentData = await program.account.agentAccount.fetch(agentPDA);
     console.log("Agent Balance: ", agentData.balance.toString());
     assert.equal(agentData.agentName, "GPT4")
@@ -196,8 +178,9 @@ describe("leea-aico", async () => {
         agentAccount: agentPDA,
       })
       .signers([agent1])
-      .rpc();
-    await logTransaction(txHash);
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
     const [agentBalance, agentData] = await Promise.all([
       provider.connection.getTokenAccountBalance(agentTokenAccount),
       program.account.agentAccount.fetch(agentPDA),
@@ -213,7 +196,7 @@ describe("leea-aico", async () => {
   });
 
   it("Mint tokens to any receiver", async () => {
-    txHash = await program.methods
+    await program.methods
       .mintToReceiver(new BN(10000000))
       .accounts({
         admin: adminKey.publicKey,
@@ -222,8 +205,9 @@ describe("leea-aico", async () => {
         receiverTokenAccount: receiverTokenAccount
       })
       .signers([adminKey])
-      .rpc();
-    await logTransaction(txHash);
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
     const [receiverBalance] = await Promise.all([
       provider.connection.getTokenAccountBalance(receiverTokenAccount)
     ]);
