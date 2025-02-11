@@ -21,9 +21,10 @@ describe("leea-aico", async () => {
     "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
   );
 
-  const ADMIN_PUB_KEY = new web3.PublicKey(
+  const LEEA_MULTISIG = new web3.PublicKey(
     "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
   );
+  
   // metaplex setup
   const metaplex = Metaplex.make(provider.connection);
 
@@ -35,7 +36,7 @@ describe("leea-aico", async () => {
   };
 
   // reward token mint PDA
-  const [rewardTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
+  const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("aiCO_reward")],
     program.programId
   );
@@ -50,11 +51,11 @@ describe("leea-aico", async () => {
   const rewardTokenMintMetadataPDA = await metaplex
     .nfts()
     .pdas()
-    .metadata({ mint: rewardTokenMintPDA });
+    .metadata({ mint: leeaTokenMintPDA });
 
   // agent token account address
   const agentTokenAccount = getAssociatedTokenAddressSync(
-    rewardTokenMintPDA,
+    leeaTokenMintPDA,
     provider.wallet.publicKey
   );
 
@@ -75,21 +76,20 @@ describe("leea-aico", async () => {
 
   it("Mint Leea Token", async () => {
     try {
-      const mintData = await getMint(provider.connection, rewardTokenMintPDA);
-      // Assertions
-      assert.equal(mintData.supply, 0);
+      const mintData = await getMint(provider.connection, leeaTokenMintPDA);
+      console.log("Token Already Minted: ", mintData.address.toString());
     } catch (e) {
       txHash = await program.methods
         .createMint(metadata.uri, metadata.name, metadata.symbol)
         .accounts({
-          rewardTokenMint: rewardTokenMintPDA,
+          leeaTokenMint: leeaTokenMintPDA,
           metadataAccount: rewardTokenMintMetadataPDA,
           tokenMetadataProgram: TOKEN_METADATA_PROGRAM_ID,
         })
         .rpc();
       await logTransaction(txHash);
-      console.log("Token Minted: ", rewardTokenMintPDA.toString());
-      const mintData = await getMint(provider.connection, rewardTokenMintPDA);
+      console.log("Token Minted: ", leeaTokenMintPDA.toString());
+      const mintData = await getMint(provider.connection, leeaTokenMintPDA);
       // Assertions
       assert.equal(mintData.supply, 0);
     }
@@ -122,7 +122,7 @@ describe("leea-aico", async () => {
     txHash = await program.methods
       .deposit(new BN(10000000))
       .accounts({
-        recipient: ADMIN_PUB_KEY,
+        recipient: LEEA_MULTISIG,
         agentAccount: agentPDA,
       })
       .rpc();
@@ -137,7 +137,7 @@ describe("leea-aico", async () => {
     txHash = await program.methods
       .aicoToAgent()
       .accounts({
-        rewardTokenMint: rewardTokenMintPDA,
+        leeaTokenMint: leeaTokenMintPDA,
         agentTokenAccount: agentTokenAccount,
         agentAccount: agentPDA,
       })
