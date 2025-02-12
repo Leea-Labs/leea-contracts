@@ -1,7 +1,5 @@
-import BN from "bn.js";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import * as web3 from "@solana/web3.js";
 import type { LeeaAgentRegistry } from "../target/types/leea_agent_registry";
 import { print_address, print_thread, print_tx, stream_program_logs, log } from "./utils";
 import assert from "assert";

@@ -9,11 +9,14 @@ escrow = "4JGo2qhxDy4gXi7PXVAiAeaTUWKwK8cnfTNJwSpsQQ8Q"
 leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
 leea-token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
 
+[programs.devnet]
+leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
+
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "Devnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
