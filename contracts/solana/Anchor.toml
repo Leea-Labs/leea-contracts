@@ -16,7 +16,8 @@ leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Devnet"
+# cluster = "Devnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
