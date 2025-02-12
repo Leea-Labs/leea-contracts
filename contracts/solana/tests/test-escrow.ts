@@ -12,51 +12,70 @@ import {
   getMinimumBalanceForRentExemptMint,
   getMint,
   getOrCreateAssociatedTokenAccount,
-  createTransferInstruction
+  createTransferInstruction,
+  mintToChecked
 } from "@solana/spl-token";
 import { randomBytes } from "crypto";
 import * as web3 from "@solana/web3.js";
-import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import path from 'path'
+import assert from "assert";
 
 describe("escrow", () => {
   const provider = anchor.AnchorProvider.env();
   const connection = provider.connection;
   const program = anchor.workspace.Escrow as anchor.Program<Escrow>;
 
-  const fullPath = path.resolve(process.cwd(), './tests/id.json')
-  const secret = require(fullPath)
+  // Create key pairs #######################################
+  // 1. Admin key
+  let fullPath = path.resolve(process.cwd(), './tests/admin.json')
+  let secret = require(path.resolve(process.cwd(), './tests/admin.json'))
   if (!secret) {
     throw new Error(`No secret found at ${fullPath}`)
   }
-  const testKey = Keypair.fromSecretKey(new Uint8Array(secret))
-  const testWallet = new NodeWallet(testKey);
-  const ADMIN_PUB_KEY = new web3.PublicKey(
-    "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
-  );
-  // Determine dummy account addresses
+  const adminKey = Keypair.fromSecretKey(new Uint8Array(secret))
+  console.log(`Admin key: ${adminKey.publicKey.toString()}'`); // GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b
+  // 2. Agent key pairs
+  fullPath = path.resolve(process.cwd(), './tests/agent.json')
+  secret = require(fullPath)
+  if (!secret) {
+    throw new Error(`No secret found at ${fullPath}`)
+  }
+  const agent1 = Keypair.fromSecretKey(new Uint8Array(secret))
+  console.log(`Agent key: ${agent1.publicKey.toString()}'`); // 55rm9zK2YZumXeXH6XSXXjgtkSzL4MDeh9K8XFmWrs28
+
+  // 2. Escrow initializer (user) and taker (agent)
   const [initializer, taker] = Array.from({ length: 2 }, () => Keypair.generate());
-  // Leea Token program
+
+  // Get required PDAs ######################################
+  // 1. Leea aiCO Token program
   const LEEA_TOKEN_PROGRAM = new web3.PublicKey(
     "6ZfJgJYt9pXZNRd9S5busKXpBYmKaQJBWAC3R1GVD5se"
   );
-  // token mint PDA
+  // 2. Token mint PDA
   const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
     [Buffer.from("aiCO_reward")],
     LEEA_TOKEN_PROGRAM
   );
+  // 3. Initializer Token account
   const initializerAtaA = getAssociatedTokenAddressSync(leeaTokenMintPDA, initializer.publicKey)
+  // 4. Taker(agent) Token account
   const takerAtaA = getAssociatedTokenAddressSync(leeaTokenMintPDA, taker.publicKey)
-  // Determined Escrow and Vault addresses
+  // 5. Admin Token account
+  const adminTokenAccount = getAssociatedTokenAddressSync(
+    leeaTokenMintPDA,
+    adminKey.publicKey
+  );
+  // 6. Determined Escrow and Vault addresses
   const seed = new anchor.BN(randomBytes(8));
   const escrow = PublicKey.findProgramAddressSync(
     [Buffer.from("state"), seed.toArrayLike(Buffer, "le", 8)],
     program.programId
   )[0];
   const vault = getAssociatedTokenAddressSync(leeaTokenMintPDA, escrow, true);
-  // Account Wrapper
+
+  // Account Wrapper #######################################
   const accounts = {
-    admin: ADMIN_PUB_KEY,
+    admin: adminKey.publicKey,
     initializer: initializer.publicKey,
     taker: taker.publicKey,
     mintA: leeaTokenMintPDA,
@@ -69,6 +88,7 @@ describe("escrow", () => {
     systemProgram: SystemProgram.programId,
   };
 
+  // Utility functions #########################################
   const confirm = async (signature: string): Promise<string> => {
     const block = await connection.getLatestBlockhash();
     await connection.confirmTransaction({
@@ -87,81 +107,81 @@ describe("escrow", () => {
   it("Top up test wallet", async () => {
     let tx = new Transaction();
     tx.instructions = [
-      ...[testKey, initializer].map((k) =>
+      ...[adminKey, initializer, taker].map((k) =>
         SystemProgram.transfer({
           fromPubkey: provider.publicKey,
           toPubkey: k.publicKey,
           lamports: 10 * LAMPORTS_PER_SOL,
         })
       )];
-
     await provider.sendAndConfirm(tx).then(log);
   })
+  //########################################################
 
   it("Check Leea Mint", async () => {
     const leeaMint = await getMint(connection, leeaTokenMintPDA);
+    assert.equal(leeaMint.address, leeaTokenMintPDA)
     console.log("Token Mint: ", leeaMint.mintAuthority.toString());
-
-    const userTokenAccount = getAssociatedTokenAddressSync(
-      leeaTokenMintPDA,
-      testKey.publicKey
-    );
-
-    const userBalance = await connection.getTokenAccountBalance(
-      userTokenAccount
-    );
-    console.log("Test Key Leea Token Balance: ", userBalance.value.amount.toString());
   });
 
-  it("Transfer Leea Token", async () => {
-    const fromTokenAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      testKey,
-      leeaTokenMintPDA,
-      testKey.publicKey
-    );
+  // it("Mint some Leea tokens to admin", async () => {
+  //   let txhash = await mintToChecked(
+  //     connection, // connection
+  //     adminKey, // fee payer
+  //     leeaTokenMintPDA, // mint
+  //     initializerAtaA, // receiver (should be a token account)
+  //     leeaTokenMintPDA, // mint authority
+  //     1e8, // amount. if your decimals are 8, you mint 10^8 for 1 token.
+  //     8, // decimals
+  //   );
+  //   console.log(`txhash: ${txhash}`);
+  //   const adminTokenBalance = await connection.getTokenAccountBalance(
+  //     initializerAtaA
+  //   );
+  //   console.log("Initializer Leea Token Balance: ", adminTokenBalance.value.amount.toString());
+  // })
 
-    // Get the derived address of the destination wallet which will hold the custom token
+  it("Transfer some Leea tokens to initializer (user)", async () => {
+    const agentTokenAccount = getAssociatedTokenAddressSync(
+      leeaTokenMintPDA,
+      agent1.publicKey
+    );
+    const agentTokenBalance = await connection.getTokenAccountBalance(
+      agentTokenAccount
+    );
+    console.log("Agent Leea token balance: ", agentTokenBalance.value.amount.toString());
     const associatedDestinationTokenAddr = await getOrCreateAssociatedTokenAccount(
       connection,
-      testKey,
+      initializer,
       leeaTokenMintPDA,
       initializer.publicKey
     );
-
-    const receiverAccount = await connection.getAccountInfo(associatedDestinationTokenAddr.address);
     const instructions: web3.TransactionInstruction[] = [];
     instructions.push(
       createTransferInstruction(
-        fromTokenAccount.address,
+        agentTokenAccount,
         associatedDestinationTokenAddr.address,
-        testKey.publicKey,
+        agent1.publicKey,
         100000,
         [],
         TOKEN_PROGRAM_ID
       )
     );
     const transaction = new web3.Transaction().add(...instructions);
-
-    await provider.sendAndConfirm(transaction, [testKey]).then(log);
-
-    const initializerTokenAccount = getAssociatedTokenAddressSync(
-      leeaTokenMintPDA,
-      initializer.publicKey
+    await provider.sendAndConfirm(transaction, [agent1]).then(log);
+    const initializerBalance = await connection.getTokenAccountBalance(
+      initializerAtaA
     );
-
-    const userBalance = await connection.getTokenAccountBalance(
-      initializerTokenAccount
-    );
-    console.log("Initializer Leea Token Balance: ", userBalance.value.amount.toString());
+    console.log("Initializer Leea token balance: ", initializerBalance.value.amount.toString());
+    assert.equal(initializerBalance.value.amount, 100000)
   })
 
   it("Initialize", async () => {
     let initializerBalance = await provider.connection.getTokenAccountBalance(
       initializerAtaA
     );
-    console.log("Initializer Leea Balance Before Escrow: ", initializerBalance.value.amount.toString());
-    const initializerAmount = 100000;
+    console.log("Initializer token balance before escrowing: ", initializerBalance.value.amount.toString());
+    const initializerAmount = 1e5;
     await program.methods
       .initialize(seed, new anchor.BN(initializerAmount))
       .accounts({ ...accounts })
@@ -172,7 +192,12 @@ describe("escrow", () => {
     initializerBalance = await provider.connection.getTokenAccountBalance(
       initializerAtaA
     );
-    console.log("Initializer Leea Balance After Escrow: ", initializerBalance.value.amount.toString());
+    console.log("Initializer token balance after escrowing: ", initializerBalance.value.amount.toString());
+    let vaultBalance = await provider.connection.getTokenAccountBalance(
+      vault
+    );
+    console.log("Vault token balance: ", vaultBalance.value.amount.toString());
+    assert.equal(vaultBalance.value.amount, initializerAmount)
   });
 
   xit("Cancel", async () => {
@@ -189,7 +214,7 @@ describe("escrow", () => {
     await program.methods
       .payToAgent(new anchor.BN(1e3))
       .accounts({ ...accounts })
-      // .signers([])
+      .signers([adminKey])
       .rpc()
       .then(confirm)
       .then(log);
@@ -197,33 +222,11 @@ describe("escrow", () => {
     const takerBalance = await provider.connection.getTokenAccountBalance(
       takerAtaA
     );
-    console.log("Agent Leea Balance After Payment: ", takerBalance.value.amount.toString());
-    const escrowBalance = await provider.connection.getTokenAccountBalance(
+    console.log("Agent token balance after work is done: ", takerBalance.value.amount.toString());
+    const vaultBalance = await provider.connection.getTokenAccountBalance(
       vault
     );
-    console.log("Escrow Leea Balance Left: ", escrowBalance.value.amount.toString());
-    // Degugging
-
-    // const latestBlockhash = await anchor
-    //   .getProvider()
-    //   .connection.getLatestBlockhash();
-
-    // const ix = await program.methods
-    //   .exchange()
-    //   .accounts({ ...accounts })
-    //   .signers([taker])
-    //   .instruction()
-
-    // const msg = new TransactionMessage({
-    //   payerKey: provider.publicKey,
-    //   recentBlockhash: latestBlockhash.blockhash,
-    //   instructions: [ix],
-    // }).compileToV0Message();
-
-    // const tx = new VersionedTransaction(msg);
-    // tx.sign([taker]);
-
-    // console.log(Buffer.from(tx.serialize()).toString("base64"));
-    // await provider.sendAndConfirm(tx).then(log);
+    console.log("Escrow Leea Balance Left: ", vaultBalance.value.amount.toString());
+    assert.equal(vaultBalance.value.amount, 1e5 - 1e3)
   });
 });
