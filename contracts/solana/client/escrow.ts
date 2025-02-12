@@ -50,10 +50,8 @@ console.log(`Initializer key: ${initializer.publicKey.toString()}'`);
 const initializerAtaA = getAssociatedTokenAddressSync(leeaTokenMintPDA, initializer.publicKey)
 
 // Determined Escrow and Vault addresses
-const seed = new anchor.BN(randomBytes(8));
-console.log(`Seed: ${seed.toString()}'`);
 const escrow = PublicKey.findProgramAddressSync(
-    [Buffer.from("state"), seed.toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("state"), initializer.publicKey.toBuffer()],
     program.programId
 )[0];
 const vault = getAssociatedTokenAddressSync(leeaTokenMintPDA, escrow, true);
@@ -77,12 +75,21 @@ async function main() {
     console.log("Initializer token balance before escrowing: ", initializerBalance.value.amount.toString());
     const initializerAmount = 1 * LAMPORTS_PER_SOL;
     await program.methods
-        .initialize(seed, new anchor.BN(initializerAmount))
+        .initialize()
         .accounts({ ...accounts })
         .signers([initializer])
         .rpc()
         .then((t) => confirm(t, connection))
         .then((t) => log(t, connection));
+
+    await program.methods
+        .deposit(new anchor.BN(initializerAmount))
+        .accounts({ ...accounts })
+        .signers([initializer])
+        .rpc()
+        .then((t) => confirm(t, connection))
+        .then((t) => log(t, connection));
+
     initializerBalance = await provider.connection.getTokenAccountBalance(
         initializerAtaA
     );

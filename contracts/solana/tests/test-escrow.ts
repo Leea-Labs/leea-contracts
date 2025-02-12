@@ -59,9 +59,8 @@ describe("escrow", () => {
     adminKey.publicKey
   );
   // 5. Determined Escrow and Vault addresses
-  const seed = new anchor.BN(randomBytes(8));
   const escrow = PublicKey.findProgramAddressSync(
-    [Buffer.from("state"), seed.toArrayLike(Buffer, "le", 8)],
+    [Buffer.from("state"), initializer.publicKey.toBuffer()],
     program.programId
   )[0];
   const vault = getAssociatedTokenAddressSync(leeaTokenMintPDA, escrow, true);
@@ -154,13 +153,24 @@ describe("escrow", () => {
   })
 
   it("Initialize", async () => {
+    await program.methods
+      .initialize()
+      .accounts({ ...accounts })
+      .signers([initializer])
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
+  });
+
+
+  it("Deposit 1", async () => {
     let initializerBalance = await provider.connection.getTokenAccountBalance(
       initializerAtaA
     );
     console.log("Initializer token balance before escrowing: ", initializerBalance.value.amount.toString());
-    const initializerAmount = 1e5;
+    const initializerAmount = 1e3;
     await program.methods
-      .initialize(seed, new anchor.BN(initializerAmount))
+      .deposit(new anchor.BN(initializerAmount))
       .accounts({ ...accounts })
       .signers([initializer])
       .rpc()
@@ -177,31 +187,33 @@ describe("escrow", () => {
     assert.equal(vaultBalance.value.amount, initializerAmount)
   });
 
-  xit("Cancel", async () => {
+  it("Deposit more", async () => {
+    let initializerBalance = await provider.connection.getTokenAccountBalance(
+      initializerAtaA
+    );
+    console.log("Initializer token balance before escrowing: ", initializerBalance.value.amount.toString());
     await program.methods
-      .cancel()
+      .deposit(new anchor.BN(2e3))
       .accounts({ ...accounts })
       .signers([initializer])
       .rpc()
       .then((t) => confirm(t, connection))
       .then((t) => log(t, connection));
+    initializerBalance = await provider.connection.getTokenAccountBalance(
+      initializerAtaA
+    );
+    console.log("Initializer token balance after escrowing: ", initializerBalance.value.amount.toString());
+    let vaultBalance = await provider.connection.getTokenAccountBalance(
+      vault
+    );
+    console.log("Vault token balance: ", vaultBalance.value.amount.toString());
+    assert.equal(vaultBalance.value.amount, 3e3)
   });
 
   it("Pay to agent", async () => {
     await program.methods
       .payToAgent(new anchor.BN(1e3))
-      .accounts({
-        admin: adminKey.publicKey,
-        initializer: initializer.publicKey,
-        taker: taker.publicKey,
-        mintA: leeaTokenMintPDA,
-        takerAtaA,
-        escrow,
-        vault,
-        associatedTokenprogram: ASSOCIATED_TOKEN_PROGRAM_ID,
-        tokenProgram: TOKEN_PROGRAM_ID,
-        systemProgram: SystemProgram.programId,
-      })
+      .accounts({ ...accounts })
       .signers([adminKey])
       .rpc()
       .then((t) => confirm(t, connection))
@@ -215,6 +227,36 @@ describe("escrow", () => {
       vault
     );
     console.log("Escrow Leea Balance Left: ", vaultBalance.value.amount.toString());
-    assert.equal(vaultBalance.value.amount, 1e5 - 1e3)
+    assert.equal(vaultBalance.value.amount, 2e3)
+  });
+
+  it("Pay to agent again", async () => {
+    await program.methods
+      .payToAgent(new anchor.BN(1e3))
+      .accounts({ ...accounts })
+      .signers([adminKey])
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
+
+    const takerBalance = await provider.connection.getTokenAccountBalance(
+      takerAtaA
+    );
+    console.log("Agent token balance after work is done: ", takerBalance.value.amount.toString());
+    const vaultBalance = await provider.connection.getTokenAccountBalance(
+      vault
+    );
+    console.log("Escrow Leea Balance Left: ", vaultBalance.value.amount.toString());
+    assert.equal(vaultBalance.value.amount, 1e3)
+  });
+
+  it("Cancel", async () => {
+    await program.methods
+      .cancel()
+      .accounts({ ...accounts })
+      .signers([adminKey])
+      .rpc()
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
   });
 });

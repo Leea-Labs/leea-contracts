@@ -7,14 +7,12 @@ use anchor_spl::{
 use crate::states::Escrow;
 
 #[derive(Accounts)]
-#[instruction(seed: u64, initializer_amount: u64)]
 pub struct Initialize<'info> {
     #[account(mut)]
     pub initializer: Signer<'info>,
     pub mint_a: Account<'info, Mint>,
     #[account(
         mut,
-        constraint = initializer_ata_a.amount >= initializer_amount,
         associated_token::mint = mint_a,
         associated_token::authority = initializer
     )]
@@ -23,10 +21,33 @@ pub struct Initialize<'info> {
         init_if_needed,
         payer = initializer,
         space = Escrow::INIT_SPACE,
-        seeds = [b"state".as_ref(), &seed.to_le_bytes()],
+        seeds = [b"state".as_ref(), initializer.key().as_ref()],
         bump
     )]
     pub escrow: Account<'info, Escrow>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub token_program: Program<'info, Token>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct Deposit<'info> {
+    #[account(mut)]
+    pub initializer: Signer<'info>,
+    pub mint_a: Account<'info, Mint>,
+    #[account(
+        mut,
+        associated_token::mint = mint_a,
+        associated_token::authority = initializer
+    )]
+    pub initializer_ata_a: Account<'info, TokenAccount>,
+    #[account(
+        mut,
+        has_one = mint_a,
+        seeds=[b"state", initializer.key().as_ref()],
+        bump = escrow.bump
+    )]
+    pub escrow: Box<Account<'info, Escrow>>,
     #[account(
         init_if_needed,
         payer = initializer,
@@ -40,28 +61,19 @@ pub struct Initialize<'info> {
 }
 
 impl<'info> Initialize<'info> {
-    pub fn initialize_escrow(
-        &mut self,
-        seed: u64,
-        bumps: &InitializeBumps,
-        initializer_amount: u64,
-    ) -> Result<()> {
+    pub fn initialize_escrow(&mut self, bumps: &InitializeBumps) -> Result<()> {
         self.escrow.set_inner(Escrow {
-            seed,
             bump: bumps.escrow,
             initializer: self.initializer.key(),
             mint_a: self.mint_a.key(),
-            initializer_amount,
         });
         Ok(())
     }
+}
 
-    pub fn deposit(&mut self, initializer_amount: u64) -> Result<()> {
-        transfer_checked(
-            self.into_deposit_context(),
-            initializer_amount,
-            self.mint_a.decimals,
-        )
+impl<'info> Deposit<'info> {
+    pub fn deposit(&mut self, amount: u64) -> Result<()> {
+        transfer_checked(self.into_deposit_context(), amount, self.mint_a.decimals)
     }
 
     fn into_deposit_context(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {

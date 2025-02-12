@@ -8,14 +8,12 @@ declare_id!("Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s");
 pub mod escrow {
     use super::*;
 
-    pub fn initialize(
-        ctx: Context<Initialize>,
-        seed: u64,
-        initializer_amount: u64,
-    ) -> Result<()> {
-        ctx.accounts
-            .initialize_escrow(seed, &ctx.bumps, initializer_amount)?;
-        ctx.accounts.deposit(initializer_amount)
+    pub fn initialize(ctx: Context<Initialize>) -> Result<()> {
+        ctx.accounts.initialize_escrow(&ctx.bumps)
+    }
+
+    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
+        ctx.accounts.deposit(amount)
     }
 
     pub fn cancel(ctx: Context<Cancel>) -> Result<()> {

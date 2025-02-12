@@ -7,11 +7,14 @@ use anchor_spl::{
 };
 
 use crate::states::Escrow;
+use crate::global::ADMIN_PUBKEY;
 
 #[derive(Accounts)]
 pub struct Cancel<'info> {
+    #[account( mut,address = ADMIN_PUBKEY)]
+    pub admin: Signer<'info>,
     #[account(mut)]
-    initializer: Signer<'info>,
+    pub initializer: AccountInfo<'info>,
     mint_a: Account<'info, Mint>,
     #[account(
         mut,
@@ -24,7 +27,7 @@ pub struct Cancel<'info> {
         has_one = initializer,
         has_one = mint_a,
         close = initializer,
-        seeds=[b"state", escrow.seed.to_le_bytes().as_ref()],
+        seeds=[b"state", initializer.key().as_ref()],
         bump = escrow.bump,
     )]
     escrow: Account<'info, Escrow>,
@@ -43,13 +46,13 @@ impl<'info> Cancel<'info> {
     pub fn refund_and_close_vault(&mut self) -> Result<()> {
         let signer_seeds: [&[&[u8]]; 1] = [&[
             b"state",
-            &self.escrow.seed.to_le_bytes()[..],
+            &self.initializer.key().to_bytes()[..],
             &[self.escrow.bump],
         ]];
 
         transfer_checked(
             self.into_refund_context().with_signer(&signer_seeds),
-            self.escrow.initializer_amount,
+            self.vault.amount,
             self.mint_a.decimals,
         )?;
 
