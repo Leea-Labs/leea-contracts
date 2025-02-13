@@ -50,9 +50,19 @@ const waitForThreadExec = async (clockworkProvider, thread: PublicKey, maxWait: 
     }
 }
 
-const log = async (signature: string): Promise<string> => {
+// Utility functions #########################################
+const confirm = async (signature: string, connection: anchor.web3.Connection): Promise<string> => {
+    const block = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({
+        signature,
+        ...block,
+    });
+    return signature;
+};
+
+const log = async (signature: string, connection: anchor.web3.Connection): Promise<string> => {
     console.log(
-        `Your transaction signature: ${signature}`
+        `Your transaction signature: https://explorer.solana.com/transaction/${signature}?cluster=custom&customUrl=${connection.rpcEndpoint}`
     );
     return signature;
 };
@@ -65,4 +75,5 @@ export {
     verifyAmount,
     waitForThreadExec,
     log,
+    confirm
 }

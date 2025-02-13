@@ -10,7 +10,9 @@ leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
 leea-token = "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3"
 
 [programs.devnet]
+escrow = "Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s"
 leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
+leea-token = "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3"
 
 [registry]
 url = "https://api.apr.dev"

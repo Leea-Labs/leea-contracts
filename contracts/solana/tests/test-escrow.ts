@@ -3,23 +3,18 @@ import { Escrow } from "../target/types/escrow";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  MINT_SIZE,
   TOKEN_PROGRAM_ID,
-  createAssociatedTokenAccountIdempotentInstruction,
-  createInitializeMint2Instruction,
-  createMintToInstruction,
   getAssociatedTokenAddressSync,
-  getMinimumBalanceForRentExemptMint,
   getMint,
   getOrCreateAssociatedTokenAccount,
-  createTransferInstruction,
-  mintToChecked
+  createTransferInstruction
 } from "@solana/spl-token";
 import { randomBytes } from "crypto";
 import * as web3 from "@solana/web3.js";
 import path from 'path'
 import assert from "assert";
 import type { LeeaTokenAico } from "../target/types/leea_token_aico";
+import { log, confirm } from "./utils";
 
 describe("escrow", () => {
   const provider = anchor.AnchorProvider.env();
@@ -86,22 +81,6 @@ describe("escrow", () => {
     systemProgram: SystemProgram.programId,
   };
 
-  // Utility functions #########################################
-  const confirm = async (signature: string): Promise<string> => {
-    const block = await connection.getLatestBlockhash();
-    await connection.confirmTransaction({
-      signature,
-      ...block,
-    });
-    return signature;
-  };
-
-  const log = async (signature: string): Promise<string> => {
-    console.log(
-      `Your transaction signature: https://explorer.solana.com/transaction/${signature}?cluster=custom&customUrl=${connection.rpcEndpoint}`
-    );
-    return signature;
-  };
   it("Top up test wallet", async () => {
     let tx = new Transaction();
     tx.instructions = [
@@ -112,7 +91,7 @@ describe("escrow", () => {
           lamports: 10 * LAMPORTS_PER_SOL,
         })
       )];
-    await provider.sendAndConfirm(tx).then(log);
+    await provider.sendAndConfirm(tx).then((t) => log(t, connection));
   })
   //########################################################
 
@@ -166,7 +145,7 @@ describe("escrow", () => {
       )
     );
     const transaction = new web3.Transaction().add(...instructions);
-    await provider.sendAndConfirm(transaction, [agent1]).then(log);
+    await provider.sendAndConfirm(transaction, [agent1]).then((t) => log(t, connection));
     const initializerBalance = await connection.getTokenAccountBalance(
       initializerAtaA
     );
@@ -185,8 +164,8 @@ describe("escrow", () => {
       .accounts({ ...accounts })
       .signers([initializer])
       .rpc()
-      .then(confirm)
-      .then(log);
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
     initializerBalance = await provider.connection.getTokenAccountBalance(
       initializerAtaA
     );
@@ -204,8 +183,8 @@ describe("escrow", () => {
       .accounts({ ...accounts })
       .signers([initializer])
       .rpc()
-      .then(confirm)
-      .then(log);
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
   });
 
   it("Pay to agent", async () => {
@@ -225,8 +204,8 @@ describe("escrow", () => {
       })
       .signers([adminKey])
       .rpc()
-      .then(confirm)
-      .then(log);
+      .then((t) => confirm(t, connection))
+      .then((t) => log(t, connection));
 
     const takerBalance = await provider.connection.getTokenAccountBalance(
       takerAtaA
