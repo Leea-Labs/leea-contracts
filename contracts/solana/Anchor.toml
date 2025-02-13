@@ -6,11 +6,11 @@ skip-lint = true
 
 [programs.localnet]
 escrow = "4JGo2qhxDy4gXi7PXVAiAeaTUWKwK8cnfTNJwSpsQQ8Q"
-leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
+leea-agent-registry = "5ewVLhDWjkrJtBqzt2KPyYBqKLEtZohbw72ZSbApJfQp"
 leea-token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
 
 [programs.devnet]
-leea-agent-registry = "AtKE5SswVK3f5pw8uQjH8C4irYKZNweAmc7UU1GgcaRa"
+leea-agent-registry = "5ewVLhDWjkrJtBqzt2KPyYBqKLEtZohbw72ZSbApJfQp"
 
 [registry]
 url = "https://api.apr.dev"
