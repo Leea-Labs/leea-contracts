@@ -5,12 +5,12 @@ resolution = true
 skip-lint = true
 
 [programs.localnet]
-escrow = "4JGo2qhxDy4gXi7PXVAiAeaTUWKwK8cnfTNJwSpsQQ8Q"
-leea-agent-registry = "5ewVLhDWjkrJtBqzt2KPyYBqKLEtZohbw72ZSbApJfQp"
-leea-token = "6KrePYF8rLwkukByMsqMXgi8d83U8fn83MzVMeXgUXag"
+escrow = "Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s"
+leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
+leea-token = "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3"
 
 [programs.devnet]
-leea-agent-registry = "5ewVLhDWjkrJtBqzt2KPyYBqKLEtZohbw72ZSbApJfQp"
+leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
 
 [registry]
 url = "https://api.apr.dev"
