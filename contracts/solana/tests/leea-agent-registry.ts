@@ -48,7 +48,7 @@ describe("leea-agent-registry", async () => {
     it("Register agents", async () => {
         const fee = new anchor.BN(100);
         await program.methods
-            .registerAgent("GPT3", fee)
+            .registerAgent("GPT3", "agent to classify text", fee)
             .accounts({
                 holder: agent1.publicKey
             })
@@ -57,7 +57,7 @@ describe("leea-agent-registry", async () => {
             .then(confirm)
             .then(log);
         await program.methods
-            .registerAgent("DeepSeek", fee)
+            .registerAgent("DeepSeek", "agent to classify text", fee)
             .accounts({
                 holder: agent2.publicKey
             })
