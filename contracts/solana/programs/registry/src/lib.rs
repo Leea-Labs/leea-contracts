@@ -1,13 +1,13 @@
 use anchor_lang::prelude::*;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG");
+declare_id!("8c7pYTaDQ9A9uUjSemBsEKYu2HirduWfN5os2R6gvUAP");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
 const AGENT_SEED: &[u8] = b"leea_agent";
 
 #[program]
-pub mod leea_agent_registry {
+pub mod registry {
     use super::*;
     pub fn register_agent(
         ctx: Context<RegisterAgent>,

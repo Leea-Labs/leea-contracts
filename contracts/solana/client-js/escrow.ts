@@ -12,7 +12,7 @@ import path from 'path'
 import assert from "assert";
 import { log, confirm, print_address } from "../tests/utils";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import type { LeeaTokenAico } from "../target/types/leea_token_aico";
+import type { Aico } from "../target/types/aico";
 import bs58 from 'bs58';
 
 // Connect to solana
@@ -33,7 +33,7 @@ const provider = new anchor.AnchorProvider(solanaConnection, wallet, {
 anchor.setProvider(provider);
 const program = anchor.workspace.Escrow as anchor.Program<Escrow>;
 const connection = provider.connection;
-const leeaAiCOprogram = anchor.workspace.LeeaTokenAico as anchor.Program<LeeaTokenAico>;
+const leeaAiCOprogram = anchor.workspace.Aico as anchor.Program<Aico>;
 print_address("🔗 Leea Escrow program", program.programId.toString());
 
 

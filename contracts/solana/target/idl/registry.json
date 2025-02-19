@@ -1,10 +1,10 @@
 {
-  "address": "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG",
+  "address": "8c7pYTaDQ9A9uUjSemBsEKYu2HirduWfN5os2R6gvUAP",
   "metadata": {
-    "name": "leea_agent_registry",
+    "name": "registry",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "Created with Anchor"
+    "description": "Leea-Labs Agent Registry"
   },
   "instructions": [
     {

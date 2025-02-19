@@ -2,12 +2,12 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/leea_token_aico.json`.
+ * IDL can be found at `target/idl/aico.json`.
  */
-export type LeeaTokenAico = {
-  "address": "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3",
+export type Aico = {
+  "address": "BvoGKiFystRDPdcjaBE2QoF8uBCTGbLzgu6sYoB2WfBg",
   "metadata": {
-    "name": "leeaTokenAico",
+    "name": "aico",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Leea-Labs aiCO token program"

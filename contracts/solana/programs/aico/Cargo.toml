@@ -1,12 +1,12 @@
 [package]
-name = "leea-token-aiCO"
+name = "aiCO"
 version = "0.1.0"
 description = "Leea-Labs aiCO token program"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "leea_token_aico"
+name = "aico"
 
 [features]
 no-entrypoint = []

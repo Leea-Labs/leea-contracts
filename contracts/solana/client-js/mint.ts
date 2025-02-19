@@ -2,7 +2,7 @@ import BN from "bn.js";
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import * as web3 from "@solana/web3.js";
-import type { LeeaTokenAico } from "../target/types/leea_token_aico";
+import type { Aico } from "../target/types/aico";
 import { print_address, log, confirm } from "../tests/utils";
 import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import path from 'path'
@@ -26,7 +26,7 @@ const provider = new anchor.AnchorProvider(solanaConnection, wallet, {
     commitment: "processed",
 });
 anchor.setProvider(provider);
-const program = anchor.workspace.LeeaTokenAico as Program<LeeaTokenAico>;
+const program = anchor.workspace.Aico as Program<Aico>;
 const connection = provider.connection;
 print_address("🔗 Leea aiCO program", program.programId.toString());
 

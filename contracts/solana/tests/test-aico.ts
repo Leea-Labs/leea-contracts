@@ -4,7 +4,7 @@ import { Program } from "@coral-xyz/anchor";
 import * as web3 from "@solana/web3.js";
 import { Metaplex } from "@metaplex-foundation/js";
 import { getMint, getAssociatedTokenAddressSync } from "@solana/spl-token";
-import type { LeeaTokenAico } from "../target/types/leea_token_aico";
+import type { Aico } from "../target/types/aico";
 import { print_address, log, confirm } from "./utils";
 import assert from "assert";
 import { Keypair, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@solana/web3.js";
@@ -14,7 +14,7 @@ describe("leea-aico", async () => {
   // Configure the client to use the local cluster.
   const provider = anchor.AnchorProvider.env();
   anchor.setProvider(provider);
-  const program = anchor.workspace.LeeaTokenAico as Program<LeeaTokenAico>;
+  const program = anchor.workspace.Aico as Program<Aico>;
   const connection = provider.connection;
   print_address("🔗 Leea aiCO program", program.programId.toString());
 

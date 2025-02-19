@@ -1,6 +1,6 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import type { LeeaAgentRegistry } from "../target/types/leea_agent_registry";
+import type { Registry } from "../target/types/registry";
 import { print_address, log, confirm } from "./utils";
 import assert from "assert";
 import { Keypair, LAMPORTS_PER_SOL, PublicKey, SystemProgram, Transaction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
@@ -9,7 +9,7 @@ describe("leea-agent-registry", async () => {
     // Configure the client to use the local cluster.
     const provider = anchor.AnchorProvider.env();
     anchor.setProvider(provider);
-    const program = anchor.workspace.LeeaAgentRegistry as Program<LeeaAgentRegistry>;
+    const program = anchor.workspace.Registry as Program<Registry>;
     const connection = provider.connection;
 
     print_address("🔗 Leea Agent Registry program", program.programId.toString());

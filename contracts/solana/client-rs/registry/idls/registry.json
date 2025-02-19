@@ -1,20 +1,14 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/leea_agent_registry.json`.
- */
-export type LeeaAgentRegistry = {
-  "address": "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG",
+{
+  "address": "8c7pYTaDQ9A9uUjSemBsEKYu2HirduWfN5os2R6gvUAP",
   "metadata": {
-    "name": "leeaAgentRegistry",
+    "name": "registry",
     "version": "0.1.0",
     "spec": "0.1.0",
-    "description": "Created with Anchor"
+    "description": "Leea-Labs Agent Registry"
   },
   "instructions": [
     {
-      "name": "registerAgent",
+      "name": "register_agent",
       "discriminator": [
         135,
         157,
@@ -32,7 +26,7 @@ export type LeeaAgentRegistry = {
           "signer": true
         },
         {
-          "name": "agentAccount",
+          "name": "agent_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -59,13 +53,13 @@ export type LeeaAgentRegistry = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "agentName",
+          "name": "agent_name",
           "type": "string"
         },
         {
@@ -79,7 +73,7 @@ export type LeeaAgentRegistry = {
       ]
     },
     {
-      "name": "updateAgentScore",
+      "name": "update_agent_score",
       "discriminator": [
         87,
         172,
@@ -102,7 +96,7 @@ export type LeeaAgentRegistry = {
           "writable": true
         },
         {
-          "name": "agentAccount",
+          "name": "agent_account",
           "writable": true,
           "pda": {
             "seeds": [
@@ -129,7 +123,7 @@ export type LeeaAgentRegistry = {
           }
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
         }
       ],
@@ -143,7 +137,7 @@ export type LeeaAgentRegistry = {
   ],
   "accounts": [
     {
-      "name": "agentAccount",
+      "name": "AgentAccount",
       "discriminator": [
         241,
         119,
@@ -158,7 +152,7 @@ export type LeeaAgentRegistry = {
   ],
   "types": [
     {
-      "name": "agentAccount",
+      "name": "AgentAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -167,7 +161,7 @@ export type LeeaAgentRegistry = {
             "type": "pubkey"
           },
           {
-            "name": "agentName",
+            "name": "agent_name",
             "type": "string"
           },
           {
@@ -183,15 +177,15 @@ export type LeeaAgentRegistry = {
             "type": "u64"
           },
           {
-            "name": "createdAt",
+            "name": "created_at",
             "type": "i64"
           },
           {
-            "name": "updatedAt",
+            "name": "updated_at",
             "type": "i64"
           }
         ]
       }
     }
   ]
-};
+}

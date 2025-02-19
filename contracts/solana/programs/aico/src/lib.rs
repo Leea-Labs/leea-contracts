@@ -9,7 +9,7 @@ use mpl_token_metadata::types::DataV2;
 use solana_program::system_instruction;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3");
+declare_id!("BvoGKiFystRDPdcjaBE2QoF8uBCTGbLzgu6sYoB2WfBg");
 
 const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
 const LEEA_MULTISIG: Pubkey = pubkey!("EFqAYmaZPwHdsBc8PCZYo5DywDVMrCHU79K6Fq1MrbQU");
@@ -35,7 +35,7 @@ fn find_metadata_account(mint: &Pubkey) -> (Pubkey, u8) {
 }
 
 #[program]
-pub mod leea_token_aico {
+pub mod aico {
     use super::*;
 
     // Create new token mint with PDA as mint authority

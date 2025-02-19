@@ -1,12 +1,12 @@
 [package]
-name = "leea-agent-registry"
+name = "registry"
 version = "0.1.0"
-description = "Created with Anchor"
+description = "Leea-Labs Agent Registry"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "leea_agent_registry"
+name = "registry"
 
 [features]
 default = []
