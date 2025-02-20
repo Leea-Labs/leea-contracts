@@ -1,6 +1,7 @@
 use anchor_client::{
     solana_sdk::{
-        commitment_config::CommitmentConfig, signature::Keypair, signer::Signer, system_program,
+        commitment_config::CommitmentConfig, signature::read_keypair_file, signer::Signer,
+        system_program,
     },
     Client, Cluster,
 };
@@ -15,13 +16,15 @@ use registry::{accounts::AgentAccount, client::accounts, client::args};
 async fn main() -> anyhow::Result<()> {
     let args: Vec<String> = env::args().collect();
 
-    let fee_str = &args[1];
-    let key = &args[2];
+    let key_path = &args[1];
+    let fee_str = &args[2];
     let url = &args[3];
 
     let fee: u64 = fee_str.parse::<u64>().unwrap();
 
-    let agent = Keypair::from_base58_string(key);
+    let agent = read_keypair_file(&*shellexpand::tilde(key_path))
+        .expect("Registry requires user keypair file");
+
     let cluster = Cluster::from_str(url)?;
 
     // Create program client
