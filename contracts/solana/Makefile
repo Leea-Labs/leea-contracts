@@ -19,7 +19,7 @@ build:
 
 build-all:
 	@echo "Building solana all programs and clients..."
-	cargo build
+	sh build.sh
 
 clean:
 	@echo "Cleaning solana programs..."

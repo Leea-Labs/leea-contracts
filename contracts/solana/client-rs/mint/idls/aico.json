@@ -1,7 +1,7 @@
 {
-  "address": "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3",
+  "address": "BvoGKiFystRDPdcjaBE2QoF8uBCTGbLzgu6sYoB2WfBg",
   "metadata": {
-    "name": "leea_token_aico",
+    "name": "aico",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Leea-Labs aiCO token program"
