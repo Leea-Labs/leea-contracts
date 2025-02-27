@@ -20,15 +20,10 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Rustup!
-        run: rustup update && rustup target add ${{ matrix.target }}
+        run: |
+          rustup toolchain install stable-${{ matrix.target }}
+          rustup update
+          rustup target add ${{ matrix.target }}
       - name: Compile
         working-directory: contracts/solana
         run: cargo build --release --target ${{ matrix.target }}
-#      - name: Compile and release
-#        uses: rust-build/rust-build.action@v1.4.5
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#        with:
-#          RUSTTARGET: ${{ matrix.target }}
-##          EXTRA_COMMAND_FLAGS: "--bin registry-client --release"
-#          SRC_DIR: "contracts/solana"
