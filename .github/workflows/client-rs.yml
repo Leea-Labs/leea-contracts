@@ -46,7 +46,7 @@ jobs:
 
     steps:
       # Checkout кода репозитория
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       # Установка стабильного Rust и целевого инструментария (target)
       - uses: actions-rs/toolchain@v1
