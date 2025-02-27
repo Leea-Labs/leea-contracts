@@ -1,6 +1,9 @@
 name: Compile client-rs
 on: push
 
+env:
+  CARGO_INCREMENTAL: 0
+
 jobs:
   release:
     name: release ${{ matrix.target }}
@@ -16,11 +19,13 @@ jobs:
         ]
     steps:
       - uses: actions/checkout@master
-      - name: Compile and release
-        uses: rust-build/rust-build.action@v1.4.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_COMMAND_FLAGS: "--bin registry-client --release"
-          SRC_DIR: "contracts/solana"
+      - run: rustup update
+      - run: cargo build --release --target ${{ matrix.target }}
+#      - name: Compile and release
+#        uses: rust-build/rust-build.action@v1.4.5
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#        with:
+#          RUSTTARGET: ${{ matrix.target }}
+##          EXTRA_COMMAND_FLAGS: "--bin registry-client --release"
+#          SRC_DIR: "contracts/solana"
