@@ -1,29 +1,78 @@
 name: Compile client-rs
 on: push
 
-env:
-  CARGO_INCREMENTAL: 0
+defaults:
+    run:
+        working-directory: contracts/solana/client-rs
 
 jobs:
-  release:
-    name: release ${{ matrix.target }}
-    runs-on: ubuntu-latest
+  build:
+    name: Build on ${{ matrix.os }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.os }}   # использовать Ubuntu, macOS или Windows runner в зависимости от матрицы
     strategy:
-      fail-fast: false
       matrix:
-        target: [
-          x86_64-pc-windows-gnu,
-          x86_64-unknown-linux-musl,
-          aarch64-apple-darwin,
-          x86_64-apple-darwin
-        ]
+        # Комбинации ОС и архитектур для сборки:
+        include:
+          - os: ubuntu-latest    # Linux (Ubuntu)
+            arch: x86_64         # 64-битная x86
+            target: x86_64-unknown-linux-musl   # целевой тройник (target triple) для Linux x86_64 (статически связанный MUSL)
+            binary: client-rs        # имя выходного бинаря (замените на название вашего приложения)
+            artifact_name: client-rs-linux-x86_64   # имя артефакта сборки
+          - os: ubuntu-latest    # Linux (Ubuntu)
+            arch: aarch64        # 64-битная ARM (AArch64)
+            target: aarch64-unknown-linux-musl  # target triple для Linux ARM64 (MUSL)
+            binary: client-rs        # имя выходного бинаря
+            artifact_name: client-rs-linux-aarch64  # имя артефакта
+          - os: macos-latest     # macOS
+            arch: x86_64         # 64-битная (Intel) macOS
+            target: x86_64-apple-darwin         # target triple для macOS x86_64
+            binary: client-rs        # имя выходного бинаря
+            artifact_name: client-rs-macos-x86_64   # имя артефакта
+          - os: macos-latest     # macOS
+            arch: aarch64        # 64-битная Apple Silicon (ARM64)
+            target: aarch64-apple-darwin        # target triple для macOS ARM64
+            binary: client-rs        # имя выходного бинаря
+            artifact_name: client-rs-macos-aarch64  # имя артефакта
+          - os: windows-latest   # Windows
+            arch: x86_64         # 64-битная Windows (x86_64)
+            target: x86_64-pc-windows-msvc      # target triple для Windows x86_64 (MSVC)
+            binary: client-rs.exe    # имя выходного бинаря (.exe)
+            artifact_name: client-rs-windows-x86_64 # имя артефакта
+          - os: windows-latest   # Windows
+            arch: aarch64        # 64-битная Windows на ARM
+            target: aarch64-pc-windows-msvc     # target triple для Windows ARM64 (MSVC)
+            binary: client-rs.exe    # имя выходного бинаря
+            artifact_name: client-rs-windows-aarch64 # имя артефакта
+
     steps:
-      - uses: actions/checkout@master
-      - name: Rustup!
-        run: |
-          rustup toolchain install stable-${{ matrix.target }}
-          rustup update
-          rustup target add ${{ matrix.target }}
-      - name: Compile
-        working-directory: contracts/solana
-        run: cargo build --release --target ${{ matrix.target }}
+      # Checkout кода репозитория
+      - uses: actions/checkout@v3
+
+      # Установка стабильного Rust и целевого инструментария (target)
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+          target: ${{ matrix.target }}
+
+      # Установка musl-инструментов для Linux x86_64 (статическая линковка)
+      - if: ${{ runner.os == 'Linux' && matrix.arch == 'x86_64' }}
+        run: sudo apt-get update && sudo apt-get install -y musl-tools
+
+      # Установка `cross` для кросс-компиляции (ARM64 на x86_64 Linux)
+      - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
+        run: cargo install cross
+
+      # Сборка релизной версии с помощью cross (для Linux ARM64)
+      - if: ${{ runner.os == 'Linux' && matrix.arch == 'aarch64' }}
+        run: cross build --target ${{ matrix.target }} --release
+
+      # Сборка релизной версии с помощью cargo (для остальных платформ)
+      - if: ${{ !(runner.os == 'Linux' && matrix.arch == 'aarch64') }}
+        run: cargo build --target ${{ matrix.target }} --release
+
+      # Загрузка артефакта сборки (скомпилированного бинаря)
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: target/${{ matrix.target }}/release/${{ matrix.binary }}
