@@ -13,14 +13,14 @@ import { randomBytes } from "crypto";
 import * as web3 from "@solana/web3.js";
 import path from 'path'
 import assert from "assert";
-import type { LeeaTokenAico } from "../target/types/leea_token_aico";
+import type { Aico } from "../target/types/aico";
 import { log, confirm } from "./utils";
 
 describe("escrow", () => {
   const provider = anchor.AnchorProvider.env();
   const connection = provider.connection;
   const program = anchor.workspace.Escrow as anchor.Program<Escrow>;
-  const leeaAiCOprogram = anchor.workspace.LeeaTokenAico as anchor.Program<LeeaTokenAico>;
+  const leeaAiCOprogram = anchor.workspace.Aico as anchor.Program<Aico>;
 
   // Create key pairs #######################################
   // 1. Admin key

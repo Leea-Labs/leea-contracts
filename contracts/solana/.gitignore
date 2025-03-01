@@ -3,6 +3,7 @@
 target/*
 !target/idl
 !target/types
+!target/deploy
 **/*.rs.bk
 node_modules
 test-ledger

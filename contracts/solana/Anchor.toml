@@ -5,14 +5,14 @@ resolution = true
 skip-lint = true
 
 [programs.localnet]
-escrow = "Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s"
-leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
-leea-token = "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3"
+escrow = "EX76e8X4DtuAxWAx2w5NAoBEnVFX4nYQGRTkL3SgWDpz"
+registry = "8c7pYTaDQ9A9uUjSemBsEKYu2HirduWfN5os2R6gvUAP"
+aico = "8oem1ww3n2oykBo3PVpFDXjp9PQfE9efWysL7oDCKNEE"
 
 [programs.devnet]
-escrow = "Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s"
-leea-agent-registry = "DM24Huh1FZ3SG3VxBYNqeePG9Vmnze9MdonghHeTPEzG"
-leea-token = "B1k3U6As88zGXHx5tzFTvXsoj5RANSNgdogXJDbCqXT3"
+escrow = "EX76e8X4DtuAxWAx2w5NAoBEnVFX4nYQGRTkL3SgWDpz"
+registry = "2UFmTxSgoRMkNhLUcs8ytnYcTbcEXNiA9EzW7BMqika3"
+aico = "8oem1ww3n2oykBo3PVpFDXjp9PQfE9efWysL7oDCKNEE"
 
 [registry]
 url = "https://api.apr.dev"

@@ -3,7 +3,7 @@ mod contexts;
 use contexts::*;
 mod states;
 
-declare_id!("Ej5xSQCEJmXUEjrPV37ZEXrvRiRbUdunbZH4yoZfcg2s");
+declare_id!("EX76e8X4DtuAxWAx2w5NAoBEnVFX4nYQGRTkL3SgWDpz");
 #[program]
 pub mod escrow {
     use super::*;
