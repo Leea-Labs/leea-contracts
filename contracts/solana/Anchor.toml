@@ -10,17 +10,17 @@ registry = "8c7pYTaDQ9A9uUjSemBsEKYu2HirduWfN5os2R6gvUAP"
 aico = "8oem1ww3n2oykBo3PVpFDXjp9PQfE9efWysL7oDCKNEE"
 
 [programs.devnet]
-escrow = "EX76e8X4DtuAxWAx2w5NAoBEnVFX4nYQGRTkL3SgWDpz"
-registry = "2UFmTxSgoRMkNhLUcs8ytnYcTbcEXNiA9EzW7BMqika3"
-aico = "8oem1ww3n2oykBo3PVpFDXjp9PQfE9efWysL7oDCKNEE"
+escrow = "4sEowPCPPr6if6BtAmoR4hXYCdGDG3hBkxcxR52vtGbr"
+registry = "4JzjcmJSqWi2gpk8tZT93JHtyMimn3bubQMYs8FLAopM"
+aico = "Atz31i134QuGE7Ajfru3pDvGMRBy7SioUmrKjnbPD4TL"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-# cluster = "Devnet"
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Devnet"
+# cluster = "Localnet"
+wallet = "./admin.json"
 
 [scripts]
 client = "yarn run ts-node client/*.ts"
