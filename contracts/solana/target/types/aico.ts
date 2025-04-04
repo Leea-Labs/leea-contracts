@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/aico.json`.
  */
 export type Aico = {
-  "address": "BvoGKiFystRDPdcjaBE2QoF8uBCTGbLzgu6sYoB2WfBg",
+  "address": "Atz31i134QuGE7Ajfru3pDvGMRBy7SioUmrKjnbPD4TL",
   "metadata": {
     "name": "aico",
     "version": "0.1.0",
@@ -204,7 +204,7 @@ export type Aico = {
           "name": "admin",
           "writable": true,
           "signer": true,
-          "address": "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
+          "address": "NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak"
         },
         {
           "name": "leeaTokenMint",
@@ -402,7 +402,7 @@ export type Aico = {
           "name": "admin",
           "writable": true,
           "signer": true,
-          "address": "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
+          "address": "NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak"
         },
         {
           "name": "receiver",

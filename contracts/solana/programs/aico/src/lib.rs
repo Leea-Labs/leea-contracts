@@ -9,9 +9,9 @@ use mpl_token_metadata::types::DataV2;
 use solana_program::system_instruction;
 use solana_program::{pubkey, pubkey::Pubkey};
 
-declare_id!("BvoGKiFystRDPdcjaBE2QoF8uBCTGbLzgu6sYoB2WfBg");
+declare_id!("Atz31i134QuGE7Ajfru3pDvGMRBy7SioUmrKjnbPD4TL");
 
-const ADMIN_PUBKEY: Pubkey = pubkey!("GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b");
+const ADMIN_PUBKEY: Pubkey = pubkey!("NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak");
 const LEEA_MULTISIG: Pubkey = pubkey!("EFqAYmaZPwHdsBc8PCZYo5DywDVMrCHU79K6Fq1MrbQU");
 
 const AGENT_SEED: &[u8] = b"leea_agent";
