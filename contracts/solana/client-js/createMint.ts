@@ -4,11 +4,18 @@ import { Program } from "@coral-xyz/anchor";
 import * as web3 from "@solana/web3.js";
 import type { Aico } from "../target/types/aico";
 import { print_address, log, confirm } from "../tests/utils";
-import { Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
+import { Keypair, LAMPORTS_PER_SOL, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import path from "path";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { Connection } from "@solana/web3.js";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
+
+const METAPLEX_METADATA_PROGRAM_ID = new web3.PublicKey(
+  "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+);
 
 // Connect to solana
 // 1. Admin key
@@ -33,34 +40,33 @@ const program = anchor.workspace.Aico as Program<Aico>;
 const connection = provider.connection;
 print_address("🔗 Leea aiCO program", program.programId.toString());
 
-const receiverPubKey = new web3.PublicKey("");
-
 const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
   [Buffer.from("aiCO_reward")],
   program.programId
 );
 
-const receiverTokenAccount = getAssociatedTokenAddressSync(
-  leeaTokenMintPDA,
-  receiverPubKey
-);
 async function main() {
   await program.methods
-    .mintToReceiver(new BN(100 * LAMPORTS_PER_SOL))
+    .createMint("Leea Test Token", "LEEA", "")
     .accounts({
-      // @ts-ignore
+      //@ts-ignore
       admin: adminKey.publicKey,
       leeaTokenMint: leeaTokenMintPDA,
-      receiver: receiverPubKey,
-      receiverTokenAccount: receiverTokenAccount,
+      metadataAccount: web3.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("metadata"),
+          METAPLEX_METADATA_PROGRAM_ID.toBuffer(),
+          leeaTokenMintPDA.toBuffer(),
+        ],
+        METAPLEX_METADATA_PROGRAM_ID
+      )[0],
+      tokenProgram: TOKEN_PROGRAM_ID,
+      tokenMetadataProgram: METAPLEX_METADATA_PROGRAM_ID,
+      systemProgram: web3.SystemProgram.programId,
+      rent: SYSVAR_RENT_PUBKEY,
     })
     .signers([adminKey])
-    .rpc()
-    .then((t) => confirm(t, connection))
-    .then((t) => log(t, connection));
-  const receiverBalance =
-    await provider.connection.getTokenAccountBalance(receiverTokenAccount);
-  console.log("Receiver Token Balance: ", receiverBalance.value.uiAmount);
+    .rpc();
 }
 
 main();
