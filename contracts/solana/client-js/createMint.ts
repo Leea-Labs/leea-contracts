@@ -3,13 +3,10 @@ import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
 import * as web3 from "@solana/web3.js";
 import type { Aico } from "../target/types/aico";
-import { print_address, log, confirm } from "../tests/utils";
-import { Keypair, LAMPORTS_PER_SOL, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+import { print_address } from "../tests/utils";
+import { Keypair, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import path from "path";
-import {
-  getAssociatedTokenAddressSync,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection } from "@solana/web3.js";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 
@@ -25,7 +22,7 @@ if (!secret) {
   throw new Error(`No secret found at ${fullPath}`);
 }
 const adminKey = Keypair.fromSecretKey(new Uint8Array(secret));
-console.log(`Admin key: ${adminKey.publicKey.toString()}'`); // GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b
+console.log(`Admin key: ${adminKey.publicKey.toString()}'`);
 
 const wallet = new NodeWallet(Keypair.fromSecretKey(new Uint8Array(secret)));
 const solanaConnection = new Connection(
