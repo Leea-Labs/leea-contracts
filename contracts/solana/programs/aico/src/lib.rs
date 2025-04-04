@@ -2,7 +2,7 @@ use anchor_lang::prelude::*;
 use anchor_spl::{
     associated_token::AssociatedToken,
     metadata::{create_metadata_accounts_v3, CreateMetadataAccountsV3, Metadata},
-    token::{burn, mint_to, Burn, Mint, MintTo, Token, TokenAccount},
+    token::{mint_to, Mint, MintTo, Token, TokenAccount},
 };
 use mpl_token_metadata::types::DataV2;
 
