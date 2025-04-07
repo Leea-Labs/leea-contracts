@@ -30,7 +30,7 @@ export type Escrow = {
           "name": "admin",
           "writable": true,
           "signer": true,
-          "address": "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
+          "address": "NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak"
         },
         {
           "name": "initializer",
@@ -673,7 +673,7 @@ export type Escrow = {
           "name": "admin",
           "writable": true,
           "signer": true,
-          "address": "GB9XNqUC32ZibLza8d7qMKBEv1hPZ142hzZ3sju7hG7b"
+          "address": "NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak"
         },
         {
           "name": "taker",
