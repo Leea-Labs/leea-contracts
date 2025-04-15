@@ -79,6 +79,75 @@ export type Registry = {
       ]
     },
     {
+      "name": "registerAgentByAdmin",
+      "discriminator": [
+        33,
+        145,
+        96,
+        28,
+        167,
+        153,
+        151,
+        193
+      ],
+      "accounts": [
+        {
+          "name": "admin",
+          "writable": true,
+          "signer": true,
+          "address": "NAnMTmTdCYoszmR7cWsd1DodzfUCadnjXoHoHqwkPak"
+        },
+        {
+          "name": "holder"
+        },
+        {
+          "name": "agentAccount",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  108,
+                  101,
+                  101,
+                  97,
+                  95,
+                  97,
+                  103,
+                  101,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "holder"
+              }
+            ]
+          }
+        },
+        {
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "agentName",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string"
+        },
+        {
+          "name": "fee",
+          "type": "u64"
+        }
+      ]
+    },
+    {
       "name": "updateAgentScore",
       "discriminator": [
         87,
