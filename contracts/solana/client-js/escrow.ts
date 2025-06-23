@@ -49,66 +49,6 @@ const [leeaTokenMintPDA] = anchor.web3.PublicKey.findProgramAddressSync(
   leeaAiCOprogram.programId
 );
 
-console.log(`Initializer key: ${adminKey.publicKey.toString()}'`);
-
-// Initializer Token account
-const initializerAtaA = getAssociatedTokenAddressSync(
-  leeaTokenMintPDA,
-  adminKey.publicKey
-);
-
-// Determined Escrow and Vault addresses
-const escrow = PublicKey.findProgramAddressSync(
-  [Buffer.from("state"), adminKey.publicKey.toBuffer()],
-  program.programId
-)[0];
-const vault = getAssociatedTokenAddressSync(leeaTokenMintPDA, escrow, true);
-
-const accounts = {
-  admin: adminKey.publicKey,
-  initializer: adminKey.publicKey,
-  mintA: leeaTokenMintPDA,
-  initializerAtaA: initializerAtaA,
-  escrow,
-  vault,
-  associatedTokenprogram: ASSOCIATED_TOKEN_PROGRAM_ID,
-  tokenProgram: TOKEN_PROGRAM_ID,
-  systemProgram: SystemProgram.programId,
-};
-
-async function main() {
-  // let initializerBalance =
-  //   await provider.connection.getTokenAccountBalance(initializerAtaA);
-  // console.log(
-  //   "Initializer token balance before escrowing: ",
-  //   initializerBalance.value.amount.toString()
-  // );
-  // const initializerAmount = 1 * LAMPORTS_PER_SOL;
-  // await program.methods
-  //   .initialize()
-  //   .accounts({ ...accounts })
-  //   .signers([adminKey])
-  //   .rpc()
-  //   .then((t) => confirm(t, connection))
-  //   .then((t) => log(t, connection));
-  // await program.methods
-  //   .deposit(new anchor.BN(initializerAmount))
-  //   .accounts({ ...accounts })
-  //   .signers([adminKey])
-  //   .rpc()
-  //   .then((t) => confirm(t, connection))
-  //   .then((t) => log(t, connection));
-  // initializerBalance =
-  //   await provider.connection.getTokenAccountBalance(initializerAtaA);
-  // console.log(
-  //   "Initializer token balance after escrowing: ",
-  //   initializerBalance.value.amount.toString()
-  // );
-  // let vaultBalance = await provider.connection.getTokenAccountBalance(vault);
-  // console.log("Vault token balance: ", vaultBalance.value.amount.toString());
-  // assert.equal(vaultBalance.value.amount, initializerAmount);
-}
-
 // Helper to get all PDAs and ATAs for a user
 function getEscrowAddressesForUser(userPubkey: PublicKey, mint: PublicKey) {
   const escrow = PublicKey.findProgramAddressSync(
@@ -119,12 +59,6 @@ function getEscrowAddressesForUser(userPubkey: PublicKey, mint: PublicKey) {
   const userAta = getAssociatedTokenAddressSync(mint, userPubkey);
   return { escrow, vault, userAta };
 }
-
-// Admin's ATA for Leea token
-const adminAtaA = getAssociatedTokenAddressSync(
-  leeaTokenMintPDA,
-  adminKey.publicKey
-);
 
 // Test: Initialize escrow for a user (admin as signer)
 export async function testInitializeEscrowForUser(userPubkey: PublicKey) {
@@ -201,9 +135,7 @@ export async function testDepositForUser(
 // Example usage for testing
 (async () => {
   // Replace with your user public key
-  const userPubkey = new web3.PublicKey(
-    "3fgZ7yuYEQhnxqbQEpvdopinE5Jkp14LA72reb62SP7T"
-  );
+  const userPubkey = new web3.PublicKey("");
   // Replace with your user secret if you want to test user deposit
   // const userSecret = ...
   // const userKeypair = Keypair.fromSecretKey(new Uint8Array(userSecret));
