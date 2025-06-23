@@ -5,21 +5,19 @@ use anchor_spl::{
 };
 
 use crate::states::Escrow;
+use crate::global::ADMIN_PUBKEY;
 
 #[derive(Accounts)]
 pub struct Initialize<'info> {
+    #[account(mut, address = ADMIN_PUBKEY)]
+    pub admin: Signer<'info>,
+    /// The user for whom the escrow is being created
     #[account(mut)]
-    pub initializer: Signer<'info>,
+    pub initializer: UncheckedAccount<'info>,
     pub mint_a: Account<'info, Mint>,
     #[account(
-        mut,
-        associated_token::mint = mint_a,
-        associated_token::authority = initializer
-    )]
-    pub initializer_ata_a: Account<'info, TokenAccount>,
-    #[account(
         init_if_needed,
-        payer = initializer,
+        payer = admin,
         space = Escrow::INIT_SPACE,
         seeds = [b"state".as_ref(), initializer.key().as_ref()],
         bump
@@ -33,14 +31,19 @@ pub struct Initialize<'info> {
 #[derive(Accounts)]
 pub struct Deposit<'info> {
     #[account(mut)]
-    pub initializer: Signer<'info>,
+    /// The authority funding the escrow (can be admin or user)
+    pub authority: Signer<'info>,
+    /// The user for whom the escrow is being funded
+    #[account(mut)]
+    pub initializer: UncheckedAccount<'info>,
     pub mint_a: Account<'info, Mint>,
+    /// Source token account (must belong to authority)
     #[account(
         mut,
         associated_token::mint = mint_a,
-        associated_token::authority = initializer
+        associated_token::authority = authority
     )]
-    pub initializer_ata_a: Account<'info, TokenAccount>,
+    pub from_ata: Account<'info, TokenAccount>,
     #[account(
         mut,
         has_one = mint_a,
@@ -50,7 +53,7 @@ pub struct Deposit<'info> {
     pub escrow: Box<Account<'info, Escrow>>,
     #[account(
         init_if_needed,
-        payer = initializer,
+        payer = authority,
         associated_token::mint = mint_a,
         associated_token::authority = escrow
     )]
@@ -78,10 +81,10 @@ impl<'info> Deposit<'info> {
 
     fn into_deposit_context(&self) -> CpiContext<'_, '_, '_, 'info, TransferChecked<'info>> {
         let cpi_accounts = TransferChecked {
-            from: self.initializer_ata_a.to_account_info(),
+            from: self.from_ata.to_account_info(),
             mint: self.mint_a.to_account_info(),
             to: self.vault.to_account_info(),
-            authority: self.initializer.to_account_info(),
+            authority: self.authority.to_account_info(),
         };
         CpiContext::new(self.token_program.to_account_info(), cpi_accounts)
     }
